@@ -2407,7 +2407,7 @@ const LIN_PLAN = [
   {from:"2027-04-02", lec:"线代 复盘 · 第2轮", ch:"六章错题二刷 + 行列式/矩阵计算", seg:"错题 + 限时自测", vid:0, review:1},
   {from:"2027-04-30", lec:"线代 复盘 · 第3轮", ch:"真题小题（选择填空，限时 40 min）", seg:"错题 + 限时自测", vid:0, review:1},
   {from:"2027-05-28", lec:"线代 复盘 · 第4轮", ch:"真题大题：方程组 / 特征值 / 二次型", seg:"错题 + 限时自测", vid:0, review:1},
-  {from:"2027-06-25", lec:"线代 复盘 · 第5轮", ch:"合书串讲六章 + 薄弱清单清空", seg:"错题 + 限时自测", vid:0, review:1},
+  {from:"2027-06-20", lec:"线代 复盘 · 第5轮", ch:"合书串讲六章 + 薄弱清单清空", seg:"错题 + 限时自测", vid:0, review:1},
 
 ];
 const CALC_PLAN = [
@@ -3195,6 +3195,8 @@ function buildItems(b, w, dow, wi, d){
    注意：bi 必须是「过滤后可见块的序号」，跟渲染时 box.appendChild 的先后一致；
    不能直接用模板下标 —— 有的天某个块没任务会被跳过，那样 key 就整体错位。 */
 function dayBlocks(dow, w, adapting, fin, wi, d){
+  /* ⭐⭐ 弹性日（每月第 4 个周日）直接替换当天全部内容：3 块共 3 h。 */
+  if (!adapting && isFlexDay(d)) return flexBlocks();
   const tpl = (adapting ? adaptTemplate() : weekdayTemplate(dow, fin, d));
   const out = [];
   tpl.forEach((b) => {
@@ -3220,7 +3222,7 @@ function dayBlocks(dow, w, adapting, fin, wi, d){
       items: [
         "本周完成 __ / __ 项（看上面的进度条，不到 80% 就想想是哪天塌了）",
         "这周最卡的一个点是 ________（写下来，下周第一个先啃它）",
-        "错题本：本周错 2 次以上的题，抄进「薄弱清单」（别只截个图）",
+        "错题本：本周错 2 次以上的题（数学/408/算法/英语）抄进「薄弱清单」（别只截个图）",
         "下周只改一件事：________（只写一件，写多了等于没写）",
       ],
     });
@@ -3265,6 +3267,29 @@ const AI_RESUME_FROM = new Date(2026, 11, 1);
 const AI_RESUME_TO   = new Date(2026, 11, 31);
 function inAiMonth(d){ return d >= AI_RESUME_FROM && d <= AI_RESUME_TO; }
 const AI_BLOCK = {nm:"AI 学习", min:30, color:"#58a6ff", src:"ai"};
+/* ⭐⭐ 2026-10-18 用户批准「每月第 4 个周日 = 弹性日」：
+   每月第 4 个周日必然落在 22~28 号 → 用「周日 && 22≤日期≤28」判定，不依赖日历表。
+   弹性日只有 3 h：英语单词 30 + 补差 120 + 复盘 30（含错题本归总）。
+   渲染与 statKeys 共用 dayBlocks，进度统计自动一致。 */
+function isFlexDay(d){
+  return !!d && d.getDay() === 0 && d.getDate() >= 22 && d.getDate() <= 28;
+}
+/* 弹性日的三块：固定内容，不读 WEEKS（任何周都有） */
+function flexBlocks(){
+  return [
+    { bi:0, nm:"英语（弹性）", color:"#58a6ff", min:30, src:"en",
+      items:["单词：红宝书已背单词滚动复习 100 个 + 生词本清空"] },
+    { bi:1, nm:"补差（弹性）", color:"#3fb950", min:120, src:"flex",
+      items:["挑本周最欠的一条线补差：把没勾完的任务做掉（最多 2 条）；本周都完成了就提前休息"] },
+    { bi:2, nm:"复盘（弹性）", color:"#e3b341", min:30, src:"review",
+      items:[
+        "本周完成 __ / __ 项（看上面的进度条，不到 80% 就想想是哪天塌了）",
+        "这周最卡的一个点是 ________（写下来，下周第一个先啃它）",
+        "错题本：本周错 2 次以上的题（数学/408/算法/英语）抄进「薄弱清单」（别只截个图）",
+        "下周只改一件事：________（只写一件，写多了等于没写）",
+      ] },
+  ];
+}
 /* 插在「算法」后面 —— 与正常周的块顺序一致（英语 / 数据结构 / 算法 / AI / 数学） */
 function withAiBlock(blocks){
   const b = blocks.slice();
@@ -3417,6 +3442,7 @@ function render(){
      这一周虽然也在缓冲窗口内，但主线是四级冲刺，徽标必须说清楚。 */
   const isCet4Week = (cur >= parseDay("2026-12-07") && cur <= parseDay("2026-12-13"));
   if (adapting){ badge.textContent = "适应周（第 " + (adaptIndexOf(cur)+1) + "/" + ADAPT.length + " 天）"; badge.style.background="#1d3a55"; badge.style.color="#79c0ff"; }
+  else if (isFlexDay(cur)){ badge.textContent = "弹性日（每月第 4 个周日）"; badge.style.background="#2d333b"; badge.style.color="#8b949e"; }
   else if (isCet4Week && cur <= CET4_EXAM){ badge.textContent = "⚠️ 四级考试周" + (fmt(cur) === fmt(CET4_EXAM) ? "（今天考试）" : ""); badge.style.background="#4a1d1d"; badge.style.color="#ff7b72"; }
   else if (fin){ badge.textContent = "期末缓冲" + (isWeekend ? "（周末）" : ""); badge.style.background="#3d2f0a"; badge.style.color="#e3b341"; }
   else { badge.textContent = "正式计划 第 " + (wi+1) + " 周"; badge.style.background="#132b1a"; badge.style.color="#3fb950"; }
