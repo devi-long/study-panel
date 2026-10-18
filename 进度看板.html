@@ -72,6 +72,25 @@
   .seg.proj{border-bottom:3px solid #f0883e}
   .seg.pause{border-bottom:3px solid #484f58}
 
+  /* ================= 📦 材料采购日程（2027.09 之后面板管不到） ================= */
+  .pkgplan{margin:14px 0 0;background:#0f141a;border:1px solid var(--line);
+    border-radius:var(--r-md);padding:2px 15px}
+  .pkgplan > summary{cursor:pointer;font-size:13px;color:#e3b341;padding:11px 0;list-style:none;
+    user-select:none;font-weight:600}
+  .pkgplan > summary::-webkit-details-marker{display:none}
+  .pkgplan > summary::before{content:"▸ ";font-size:11px}
+  .pkgplan[open] > summary::before{content:"▾ "}
+  .pkgplan .prow{display:flex;gap:10px;font-size:12.5px;color:var(--dim);line-height:1.7;
+    padding:6px 0;border-top:1px dashed rgba(255,255,255,.055);align-items:baseline}
+  .pkgplan .prow:first-of-type{border-top:0}
+  .pkgplan .pw{flex:none;width:92px;font-weight:700;color:#e3b341;font-variant-numeric:tabular-nums}
+  .pkgplan .pt{color:#c6d0da}
+  .pkgplan .pno{margin:8px 0 12px;padding-top:9px;border-top:1px dashed rgba(255,255,255,.055);
+    font-size:12px;color:var(--dim);line-height:1.85}
+  .pkgplan .pno b{color:#ff9a91}
+  .pkgplan .pnote{font-size:12px;color:var(--dim2);margin:2px 0 8px;line-height:1.7}
+  @media (max-width:760px){ .pkgplan .prow{flex-direction:column;gap:2px} .pkgplan .pw{width:auto} }
+
   /* ================= 总进度 ================= */
   .barwrap{margin-top:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
   .bar{flex:1;min-width:220px;height:13px;background:#080b10;border-radius:99px;overflow:hidden;
@@ -228,6 +247,17 @@
 
     <div class="next" id="nextbox">下一件该做的事：<b>—</b></div>
   </header>
+
+<details class="pkgplan">
+  <summary>📦 材料采购日程（面板只管到 W36 = 2027-06-27，之后的采购点看这里）</summary>
+  <div class="pnote">面板会在对应那周自动弹出采购卡（W1 / 12 月中 / 寒假前 / 3 月）；这张表是面板覆盖不到的后续采购。</div>
+  <div class="prow"><span class="pw">2027.09</span><span class="pt">张宇《660 题》—— 2027.9–2028.1「基础篇扫尾 + 30 讲二刷」的题源</span></div>
+  <div class="prow"><span class="pw">2028.02</span><span class="pt">张宇《强化 36 讲》+《提高篇》—— <b>两本必须一起买</b>，提高篇只配强化用（基础轮绝对不动）</span></div>
+  <div class="prow"><span class="pw">2028.07</span><span class="pt">政治全套（<b>当年版</b>）+ 英一作文书 —— 政治 2028.7 才起，早买必然过时</span></div>
+  <div class="prow"><span class="pw">2028.09</span><span class="pt">英一近 10 年套卷 + 模拟卷 —— 冲刺阶段，最后 3 个月只做套卷</span></div>
+  <div class="pno"><b>明确别买：</b>六级新资料（已有 28 条够用到 2027-06）· 政治任何早期版本 · 张宇《提高篇》单独提前 ·
+    408 网课（王道书自学 + 真题）· 显卡 / GPU（手写 GPT 用 Colab 免费额度）</div>
+</details>
 
   <div class="chips" id="chips"></div>
   <div class="grid" id="grid"></div>

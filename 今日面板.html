@@ -3525,29 +3525,57 @@ function auditKeys(renderKeys, dow, adapting, fin, w, wi){
 }
 let auditNote = "";
 
-/* ---------------- 📦 W1 采购清单（2026-10-18 加） ----------------
-   为什么不塞进 blocks：它不产生学习时长，塞进去会拉高 weekTotal、
-   把进度分母搞乱，10-19 那条「渲染 7 条以上」的断言也会被带偏。
-   状态单独存 dsh-pkg-v1（不跟日期绑定），全勾完自动隐藏。 */
-const PKG_FROM = parseDay("2026-10-19");
-const PKG_TO   = parseDay("2026-10-25");
-const PKG_KEY  = "dsh-pkg-v1";
-const PKG_NOW = [
-  {k:"p1", q:1, t:"确认张宇视频来源（全套 151.5 h：高数 100.8 / 线代 30.4 / 概率 20.3）", due:"今天", hot:1},
-  {k:"p2", q:2, t:"张宇《基础30讲》三册（高数 / 线代 / 概率 · 数一版）", due:"10-21 前到"},
-  {k:"p3", q:3, t:"张宇《1000 题》基础篇（数一）—— 第一轮唯一的做题载体", due:"10-21 前到"},
-  {k:"p4", q:4, t:"王道《数据结构》", due:"10-21 前到"},
-  {k:"p5", q:5, t:"装个背单词 APP（四级核心词免费词库）—— W1–W8 用这个，红宝书 W9 才起", due:"10-21 前"},
-  {k:"p6", q:6, t:"A4 草稿纸 2 包 + A5 活页本（当「薄弱清单」用）", due:"10-20 前到"},
-  {k:"p7", q:7, t:"四级真题 16 套（W1–W8 冲刺，12-12 考试）", due:"10-25 前到"},
-  {k:"p8", q:8, t:"王道《计算机组成原理》（W10 才用，但寒假要加速 → 现在屯）", due:"10-25 前到"},
-  {k:"p9", q:9, t:"计时器 / 手机倒计时（408 整卷 180 min、蓝桥 4h、阅读限时都靠它）", due:"10-25 前"}
+/* ---------------- 📦 材料采购提醒（2026-10-18 加，多时间窗） ----------------
+   为什么独立成卡、不塞进 blocks：采购不产生学习时长，塞进去会拉高 weekTotal、
+   把进度分母搞乱。所以做成 #pkgBox，完全不进 blocks。
+   ⭐ 2026-10-18 晚：原来只有一个 W1 窗口 → 后面的采购点没人提醒（用户提出）。
+   现在改成 4 个时间窗，每批在「该买的那一周」自动弹出来，各自独立保存：
+     w1  10-19 ~ 10-25  开学这批
+     d12 12-19 ~ 12-27  红宝书 + 英一真题
+     j01 01-16 ~ 01-25  408 真题 + 操作系统（W18 = 02-22 开）+ 囤草稿纸
+     m03 03-06 ~ 03-14  蓝桥报名 + 计算机网络（W23 = 03-29 开）
+   W36（2027-06-27）之后的采购（660 / 强化两册 / 政治 / 套卷）面板管不到 → 看板里有静态日程。 */
+const PKG_WINDOWS = [
+  {tag:"w1", from:"2026-10-19", to:"2026-10-25",
+   title:"📦 W1 采购清单", note:"这批约 450–550 元 · 按编号顺序下单",
+   sub:"书不到，W1 的数学和 408 就跑不起来 —— <b style='color:#ff7b72'>第 1 条是唯一会卡住开局的事</b>，先确认它。",
+   items:[
+     {k:"p1", q:1, t:"确认张宇视频来源（全套 151.5 h：高数 100.8 / 线代 30.4 / 概率 20.3）", due:"今天", hot:1},
+     {k:"p2", q:2, t:"张宇《基础30讲》三册（高数 / 线代 / 概率 · 数一版）", due:"10-21 前到"},
+     {k:"p3", q:3, t:"张宇《1000 题》基础篇（数一）—— 第一轮唯一的做题载体", due:"10-21 前到"},
+     {k:"p4", q:4, t:"王道《数据结构》", due:"10-21 前到"},
+     {k:"p5", q:5, t:"装个背单词 APP（四级核心词免费词库）—— W1–W8 用这个，红宝书 W9 才起", due:"10-21 前"},
+     {k:"p6", q:6, t:"A4 草稿纸 2 包 + A5 活页本（当「薄弱清单」用）", due:"10-20 前到"},
+     {k:"p7", q:7, t:"四级真题 16 套（W1–W8 冲刺，12-12 考试）", due:"10-25 前到"},
+     {k:"p8", q:8, t:"王道《计算机组成原理》（W10 才用，但寒假要加速 → 现在屯）", due:"10-25 前到"},
+     {k:"p9", q:9, t:"计时器 / 手机倒计时（408 整卷 180 min、蓝桥 4h、阅读限时都靠它）", due:"10-25 前"}
+   ]},
+  {tag:"d12", from:"2026-12-19", to:"2026-12-27",
+   title:"📦 12 月中采购", note:"四级考完了，英语主线换轨",
+   sub:"W9（12-21）起红宝书一轮、W14（01-18）起每天 1 篇真题阅读 —— 这两样这周得先在手边。",
+   items:[
+     {k:"d1", q:1, t:"红宝书（纸质）或 墨墨 / 不背单词词库（二选一，别再下 PDF 扫描版）", due:"12-21 前", hot:1},
+     {k:"d2", q:2, t:"英一真题（近 20 年，张剑黄皮书一类）", due:"01-18 前"},
+     {k:"d3", q:3, t:"四级出分后定第六条：六级 2027-06 那场还考不考（考 → 六级真题按 W23 起排）", due:"12 月底看分"}
+   ]},
+  {tag:"j01", from:"2027-01-16", to:"2027-01-25",
+   title:"📦 寒假前采购", note:"寒假 408 加速要用的东西，别等快递停",
+   sub:"W15（01-25）进寒假，408 加到 16 h/周；W18（02-22）开操作系统 —— 这两样一起下单，省一次运费。",
+   items:[
+     {k:"j1", q:1, t:"王道《408 真题》（15 年 2010–2024）", due:"01-25 前", hot:1},
+     {k:"j2", q:2, t:"王道《操作系统》（W18 = 02-22 开课，寒假有状态时先买）", due:"02-20 前"},
+     {k:"j3", q:3, t:"草稿纸再囤一箱（春节快递会停，数学寒假每天 80–110 min）", due:"01-25 前"}
+   ]},
+  {tag:"m03", from:"2027-03-06", to:"2027-03-14",
+   title:"📦 3 月采购 / 报名", note:"蓝桥省赛 + 408 最后一门",
+   sub:"省赛 2027-04-10（W25），报名一般 3 月截止；W23（03-29）开计算机网络。",
+   items:[
+     {k:"m1", q:1, t:"蓝桥杯省赛报名（2027-04-10 考试，约 300 元）—— 先问学校 / 教练能不能减免", due:"03-14 前", hot:1},
+     {k:"m2", q:2, t:"王道《计算机网络》（W23 = 03-29 开课）", due:"03-28 前"}
+   ]}
 ];
+/* 面板管不到的部分（W36 = 2027-06-27 之后）→ 看板里有静态日程，这里只列出来备查 */
 const PKG_LATER = [
-  ["12 月中（四级考完）", "英一真题（近 20 年）+ 红宝书（纸质 / 墨墨词库二选一）—— W9 起红宝书一轮，W14 起每天 1 篇真题阅读"],
-  ["2027.01 寒假", "王道《408 真题》（15 年 2010–2024）—— W30–W35 整卷模拟就靠它"],
-  ["2027.03", "蓝桥杯省赛报名（2027-04-10，约 300 元；先问学校/教练能不能减免）"],
-  ["2027.06", "王道《操作系统》《计算机网络》—— W18 / W23 才开这两门"],
   ["2027.09", "张宇《660 题》—— 2027.9–2028.1「基础篇扫尾 + 30 讲二刷」的题源"],
   ["2028.02", "张宇《强化 36 讲》+《提高篇》—— 两本必须一起买，提高篇只配强化用"],
   ["2028.07", "政治全套（当年版）+ 英一作文 —— 政治 2028.7 才起，早买必然过时"],
@@ -3559,22 +3587,32 @@ const PKG_NO = ["六级新资料（已有 28 条，够用到 2027-06）",
   "408 网课（计划是王道书自学 + 真题）",
   "显卡 / GPU（手写 GPT 用 Colab / Kaggle 免费额度就够）"];
 
-let pkgState = null;
-function pkgLoad(){
-  if (pkgState) return pkgState;
-  try { pkgState = JSON.parse(lsGet(PKG_KEY) || "{}") || {}; } catch(e){ pkgState = {}; }
-  if (typeof pkgState !== "object" || pkgState === null) pkgState = {};
-  return pkgState;
+const pkgStates = {};
+let pkgActive = null;
+function pkgKey(tag){ return "dsh-pkg-" + tag + "-v1"; }
+function pkgState(tag){
+  if (pkgStates[tag]) return pkgStates[tag];
+  let o = {};
+  try { o = JSON.parse(lsGet(pkgKey(tag)) || "{}") || {}; } catch(e){ o = {}; }
+  if (typeof o !== "object" || o === null) o = {};
+  pkgStates[tag] = o;
+  return o;
 }
-function pkgSave(){ try { lsSet(PKG_KEY, JSON.stringify(pkgState || {})); } catch(e){} }
+function pkgWindow(){
+  for (let i = 0; i < PKG_WINDOWS.length; i++){
+    const w = PKG_WINDOWS[i];
+    if (cur >= parseDay(w.from) && cur <= parseDay(w.to)) return w;
+  }
+  return null;
+}
 function pkgToggle(k){
-  const st = pkgLoad();
+  if (!pkgActive) return;
+  const st = pkgState(pkgActive.tag);
   if (st[k]) delete st[k]; else st[k] = 1;
-  pkgSave();
+  try { lsSet(pkgKey(pkgActive.tag), JSON.stringify(st)); } catch(e){}
   const box = document.getElementById("pkgBox");
   if (!box) return;
-  /* 原地更新，不重建整张卡：重建会把手里的 input 变成游离节点，
-     连续点几下就只有第一下生效。 */
+  /* 原地更新，不重建整张卡：重建会把手里的 input 变成游离节点 */
   box.querySelectorAll(".row").forEach(r => {
     const inp = r.querySelector("input");
     if (!inp) return;
@@ -3582,33 +3620,34 @@ function pkgToggle(k){
     inp.checked = on;
     if (on) r.classList.add("done"); else r.classList.remove("done");
   });
-  const leftN = PKG_NOW.filter(x => !st[x.k]).length;
+  const items = pkgActive.items;
+  const leftN = items.filter(x => !st[x.k]).length;
   const cnt = box.querySelector(".cnt2");
-  if (cnt) cnt.textContent = (PKG_NOW.length - leftN) + "/" + PKG_NOW.length;
+  if (cnt) cnt.textContent = (items.length - leftN) + "/" + items.length;
   const bar = box.querySelector(".bar2 > i");
-  if (bar) bar.style.width = Math.round((PKG_NOW.length - leftN) / PKG_NOW.length * 100) + "%";
-  if (leftN === 0){ box.style.display = "none"; box.innerHTML = ""; }
+  if (bar) bar.style.width = Math.round((items.length - leftN) / items.length * 100) + "%";
+  if (leftN === 0){ box.style.display = "none"; box.innerHTML = ""; pkgActive = null; }
 }
 function renderPkg(){
   const box = document.getElementById("pkgBox");
   if (!box) return;
-  const left = PKG_NOW.filter(x => !pkgLoad()[x.k]).length;
-  /* 只在 W1 显示；全买齐后自动收起来，不占视线 */
-  const inWin = (cur >= PKG_FROM && cur <= PKG_TO);
-  if (!inWin || left === 0){
-    box.style.display = "none";
-    box.innerHTML = "";
-    return;
+  const w = pkgWindow();
+  if (!w){
+    box.style.display = "none"; box.innerHTML = ""; pkgActive = null; return;
   }
+  const st = pkgState(w.tag);
+  const leftN = w.items.filter(x => !st[x.k]).length;
+  if (leftN === 0){   /* 这批买齐了 → 收起，不占视线 */
+    box.style.display = "none"; box.innerHTML = ""; pkgActive = null; return;
+  }
+  pkgActive = w;
   box.style.display = "block";
-  const st = pkgLoad();
-  const doneN = PKG_NOW.length - left;
-  let h = '<h2>📦 W1 采购清单' +
-          '<span class="cnt2">' + doneN + "/" + PKG_NOW.length + "</span>" +
-          '<span style="font-size:12px;font-weight:400;color:#9aa7b4">这批约 450–550 元 · 按编号顺序下单</span></h2>' +
-          '<div class="sub">书不到，W1 的数学和 408 就跑不起来 —— ' +
-          '<b style="color:#ff7b72">第 1 条是唯一会卡住开局的事</b>，先确认它。</div>';
-  PKG_NOW.forEach(x => {
+  const doneN = w.items.length - leftN;
+  let h = "<h2>" + w.title +
+          '<span class="cnt2">' + doneN + "/" + w.items.length + "</span>" +
+          '<span style="font-size:12px;font-weight:400;color:#9aa7b4">' + w.note + "</span></h2>" +
+          '<div class="sub">' + w.sub + "</div>";
+  w.items.forEach(x => {
     const on = !!st[x.k];
     h += '<div class="row' + (on ? " done" : "") + '">' +
          '<input type="checkbox" data-k="' + x.k + '"' + (on ? " checked" : "") + ">" +
@@ -3616,9 +3655,9 @@ function renderPkg(){
          '<span class="txt">' + esc(x.t) +
          '<span class="due' + (x.hot ? " hot" : "") + '">' + esc(x.due) + "</span></span></div>";
   });
-  h += '<div class="bar2"><i style="width:' + Math.round(doneN / PKG_NOW.length * 100) + '%"></i></div>';
-  h += '<details><summary>后面按时间点买（现在别下单，囤了只会占地方/过时）</summary><div class="later">' +
-       PKG_LATER.map(([w, t]) => "<b>" + esc(w) + "</b> → " + esc(t)).join("<br>") +
+  h += '<div class="bar2"><i style="width:' + Math.round(doneN / w.items.length * 100) + '%"></i></div>';
+  h += '<details><summary>W36（2027-06-27）之后才买的（面板管不到，看板里有日程）</summary><div class="later">' +
+       PKG_LATER.map(([d, t]) => "<b>" + esc(d) + "</b> → " + esc(t)).join("<br>") +
        "</div></details>";
   h += '<div class="no"><b>明确别买：</b>' + PKG_NO.map(esc).join(" · ") + "</div>";
   box.innerHTML = h;
@@ -3643,7 +3682,7 @@ function render(){
   const blocks = dayBlocks(dow, w, adapting, fin, wi, cur);
   /* 「课上加时」只在课表已知窗口内存在（≤ 2027-01-24）；之后转成 408 自学时间 */
   const classKnown = !fin && cur <= CLASS_KNOWN_TO;
-  renderPkg();   /* 📦 W1 采购清单：只在 10-19~10-25 出现，全勾完自动收起 */
+  renderPkg();   /* 📦 材料采购提醒：4 个时间窗，只在对应那周出现，买齐自动收起 */
 
   document.getElementById("dateTitle").textContent =
     fmt(cur) + " · " + WD[dow] + (isToday ? "（今天）" : "");
