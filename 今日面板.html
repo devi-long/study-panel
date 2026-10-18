@@ -207,6 +207,12 @@ const CET4_EXAM  = new Date(2026, 11, 12);
    此日（含）之前一律按「考试期」处理：数学整块隐藏、概率不排复习。
    这是**唯一**的考期结束口径，不要在别处再写死日期。 */
 const EXAM_END   = new Date(2027, 0, 24);
+/* ⭐⭐ 用户 2026-10-18 要求「在 32 周时提醒我去补充剩下的计划」。
+   W32 起（2027-05-24）每屏 meta 行挂一条红色提醒，直到 W36 最后一天（2027-06-27）。
+   细排只排到 W36，之后必须手工往 WEEKS 里补下一段（先补 2027 暑假 8 周）。
+   别把这条提醒删掉 —— 它是唯一不依赖「记得」的机制。 */
+const EXTEND_FROM = new Date(2027, 4, 24);   /* W32 第一天 */
+const PLAN_LAST   = new Date(2027, 5, 27);   /* W36 最后一天 */
 /* ⭐ 蓝桥杯省赛（用户目标：冲省一）。2026 年第十七届实测为 **2026-04-11 ~ 04-12**
    （4 月第 2 个周末，见成都文理学院赛点通报）。2027 年官方尚未公布，
    按同一节奏推算为 **2027-04-10（周六）** → 落在 W25。
@@ -3430,7 +3436,7 @@ function render(){
     (fin ? "期末缓冲" : (isWinter(cur) ? "寒假强化（408 16h/周 · 数学隔天加时）" : "平时")) +
     "（今天合计 " + dayH + " h）</b></span>";
 
-  document.getElementById("meta").innerHTML = adapting
+  let metaHTML = adapting
     ? "<span>本周任务：<b>适应周（" + ADAPT.length + " 天）</b></span><span>蓝桥杯摸底：<b>本周待做</b>（2 套真题 + 失分分类）</span><span>正式计划 <b>10-19（下周一）</b> 开始</span>"
     : (isCet4Week
         ? "<span>四级考试：<b>2026-12-12（周六）</b></span>" +
@@ -3446,6 +3452,13 @@ function render(){
                 : "<span>四级已考完</span>") +
               modeSpan +
               "<span>本周第 <b>" + (wi+1) + "/" + WEEKS.length + "</b> 周</span>"));
+  /* ⭐⭐ W32 起（2027-05-24）挂「该补计划了」提醒 —— 用户 2026-10-18 指定。 */
+  if (cur >= EXTEND_FROM){
+    const leftW = Math.max(1, Math.ceil((PLAN_LAST - cur) / (7 * DAY)));
+    metaHTML += '<span style="color:#ff7b72;font-weight:600">⚠️ 细排只剩 <b>' + leftW +
+      ' 周</b>（W' + (wi+1) + '–W' + WEEKS.length + '，到 2027-06-27）→ <b>现在该补后续计划了</b>：先把 2027 暑假 8 周填进 WEEKS</span>';
+  }
+  document.getElementById("meta").innerHTML = metaHTML;
 
   /* ---- 焦点区 ---- */
   const fb = document.getElementById("focus");
