@@ -5,120 +5,184 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>今日面板 · 每天自动换</title>
 <style>
+  /* ================= 设计令牌 ================= */
   :root{
-    --bg:#0e1116; --card:#161b22; --card2:#1c232c; --line:#283039;
-    --text:#e6edf3; --dim:#9aa7b4; --dim2:#68737f; --green:#3fb950;
-    --blue:#58a6ff; --orange:#f0883e; --red:#f85149; --purple:#a371f7;
+    --bg:#0d1117; --bg2:#090d12;
+    --card:#161b22; --card2:#1b2129; --card3:#0f141b;
+    --line:#232b36; --line2:#313b48;
+    --text:#e8eef5; --dim:#9aa7b4; --dim2:#7d8794;
+    --green:#3fb950; --blue:#58a6ff; --orange:#f0883e;
+    --red:#f85149; --purple:#a371f7; --gold:#e3b341;
+    --r-lg:16px; --r-md:12px; --r-sm:9px;
+    --shadow:0 10px 30px rgba(0,0,0,.34);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);padding:22px 18px 80px;line-height:1.6;
-    font-family:"Microsoft YaHei UI","Microsoft YaHei",system-ui,-apple-system,sans-serif}
-  .wrap{max-width:1200px;margin:0 auto}
-  header{background:linear-gradient(135deg,#161d29,#111620);border:1px solid var(--line);
-    border-radius:18px;padding:20px 22px;margin-bottom:16px}
-  .top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
-  h1{font-size:23px;font-weight:700}
-  .badge{font-size:12px;padding:3px 10px;border-radius:99px;font-weight:700}
-  .nav{margin-left:auto;display:flex;gap:6px}
-  .nav button{background:var(--card2);color:var(--text);border:1px solid var(--line);
-    padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12.5px;font-family:inherit}
-  .nav button:hover:not(:disabled){border-color:#4a5568;background:#232a35}
-  .nav button:disabled{opacity:.35;cursor:not-allowed}
-  /* 跳去「进度看板」的链接：外观跟旁边的按钮一致，但它是 <a>（新标签页打开） */
-  .nav .navlink{display:inline-block;background:#1f6feb;color:#fff;border:1px solid #1f6feb;
-    border-radius:6px;padding:5px 11px;font-size:13px;font-weight:700;text-decoration:none;line-height:1.5}
-  .nav .navlink:hover{background:#388bfd;border-color:#388bfd}
-  .meta{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--dim)}
-  .meta b{color:var(--text)}
-  .focus{margin-top:14px;background:#0d1219;border:1px solid var(--line);border-radius:11px;padding:12px 15px}
-  .focus h3{font-size:12.5px;color:var(--dim2);font-weight:600;margin-bottom:7px}
-  .frow{display:flex;gap:10px;font-size:13.5px;padding:3px 0;align-items:baseline}
-  .frow .k{min-width:104px;font-weight:700;font-size:12.5px}
-  .frow .v{color:#c9d3dd}
-  .barwrap{margin-top:14px;display:flex;align-items:center;gap:13px}
-  .bar{flex:1;height:11px;background:#0a0d11;border-radius:99px;overflow:hidden;border:1px solid var(--line)}
-  .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3b9dff,#3fb950);transition:width .3s}
-  .pct{font-size:18px;font-weight:700;min-width:60px;text-align:right}
-  .blocks{display:grid;grid-template-columns:repeat(auto-fill,minmax(370px,1fr));gap:14px;margin-top:16px}
-  .blk{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden}
-  .blk .hd{display:flex;align-items:center;gap:9px;padding:11px 15px;border-bottom:1px solid var(--line)}
-  .blk .dot{width:9px;height:9px;border-radius:99px}
-  .blk .nm{font-size:15px;font-weight:700}
-  .blk .min{margin-left:auto;font-size:12px;color:var(--dim2)}
-  .blk .bd{padding:12px 15px 14px}
-  .blk .wk{font-size:12.5px;color:#e3b341;background:#1a1508;border:1px solid #3d2f0a;
-    border-radius:7px;padding:5px 9px;margin-bottom:9px}
-  .daytag{display:inline-block;font-size:11px;font-weight:700;color:#0e1116;background:var(--dim);
-    border-radius:5px;padding:0 5px;margin-right:6px;vertical-align:1px}
-  ul{list-style:none;display:flex;flex-direction:column;gap:7px}
-  li{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;color:#c9d3dd}
-  li input{appearance:none;width:17px;height:17px;min-width:17px;margin-top:3px;border:1.5px solid #3f4a5a;
-    border-radius:5px;cursor:pointer;position:relative;transition:.15s;background:#0b0f14}
-  li input:hover{border-color:#5b6a80}
-  li input:checked{background:var(--green);border-color:var(--green)}
-  li input:checked::after{content:"";position:absolute;left:5px;top:2px;width:4px;height:8.5px;
-    border:solid #06210f;border-width:0 2.5px 2.5px 0;transform:rotate(43deg)}
-  li.done span{color:var(--dim2);text-decoration:line-through}
-  li span{cursor:pointer}
-  .blk.complete{border-color:#2c5a3d}
-  .adapt{background:#161b22;border:1px solid #2d3f57;border-left:4px solid var(--blue);
-    border-radius:11px;padding:13px 16px;margin-top:16px;font-size:13.5px;color:var(--dim)}
-  .adapt b{color:#79c0ff}
-  .empty{background:var(--card);border:1px dashed var(--line);border-radius:13px;
-    padding:34px 20px;text-align:center;color:var(--dim);font-size:14px;margin-top:16px;line-height:2}
-  .tools{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
-  .tools button{background:var(--card2);color:var(--text);border:1px solid var(--line);
-    padding:9px 16px;border-radius:9px;cursor:pointer;font-size:13px;font-family:inherit}
-  .tools button:hover{border-color:#4a5568;background:#232a35}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{
+    background:
+      radial-gradient(1100px 520px at 12% -12%,#16202e 0%,transparent 62%),
+      radial-gradient(880px 420px at 100% -6%,#131a24 0%,transparent 58%),
+      var(--bg);
+    color:var(--text);padding:20px 18px 88px;line-height:1.66;font-size:15px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",system-ui,sans-serif;
+  }
+  ::selection{background:rgba(88,166,255,.28)}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-track{background:var(--bg2)}
+  ::-webkit-scrollbar-thumb{background:#2b3543;border-radius:99px;border:2px solid var(--bg2)}
+  ::-webkit-scrollbar-thumb:hover{background:#3a4655}
+  .wrap{max-width:1180px;margin:0 auto}
 
-  /* ---- 云同步面板（2026-10-18）-----------------------------------------
-     换设备同步勾选的入口。默认隐藏，点「☁️ 云同步」才展开。 */
-  .syncbox{margin-top:14px;background:var(--card);border:1px solid var(--line);
-    border-radius:12px;padding:14px 16px}
+  /* ================= 顶栏 ================= */
+  header{position:relative;overflow:hidden;box-shadow:var(--shadow);
+    background:linear-gradient(135deg,#182130,#121823 58%,#0f141d);
+    border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px;margin-bottom:15px}
+  header::after{content:"";position:absolute;left:0;right:0;top:0;height:2px;
+    background:linear-gradient(90deg,#3b9dff,#3fb950 46%,rgba(63,185,80,0))}
+  .top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  h1{font-size:22px;font-weight:700;letter-spacing:.2px;font-variant-numeric:tabular-nums}
+  .badge{font-size:11.5px;padding:3px 10px;border-radius:99px;font-weight:700;letter-spacing:.3px}
+  .nav{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .nav button{background:var(--card2);color:var(--text);border:1px solid var(--line);
+    padding:6px 12px;border-radius:var(--r-sm);cursor:pointer;font-size:12.5px;font-family:inherit;
+    transition:border-color .15s,background .15s,transform .1s}
+  .nav button:hover:not(:disabled){border-color:var(--line2);background:#222a34}
+  .nav button:active:not(:disabled){transform:translateY(1px)}
+  .nav button:disabled{opacity:.32;cursor:not-allowed}
+  .nav .navlink{display:inline-block;background:#1f6feb;color:#fff;border:1px solid #388bfd;
+    border-radius:var(--r-sm);padding:5px 11px;font-size:13px;font-weight:700;text-decoration:none;
+    line-height:1.5;transition:background .15s}
+  .nav .navlink:hover{background:#388bfd}
+
+  /* ================= 状态条 / 焦点区 ================= */
+  .meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px;font-size:12.5px;color:var(--dim)}
+  .meta > span{background:var(--card3);border:1px solid var(--line);border-radius:99px;
+    padding:2px 9px;line-height:1.75;font-variant-numeric:tabular-nums}
+  .meta b{color:var(--text);font-weight:700}
+  .meta > span[style*="ff7b72"]{border-color:#6b2f33;background:#2a1518}
+  .focus{margin-top:13px;background:linear-gradient(180deg,#0e141c,#0b1017);
+    border:1px solid var(--line);border-radius:var(--r-md);padding:13px 15px}
+  .focus h3{font-size:11.5px;color:var(--dim2);font-weight:700;letter-spacing:.7px;margin-bottom:8px}
+  .frow{display:flex;gap:10px;font-size:13.5px;padding:4px 0;align-items:baseline;
+    border-top:1px dashed rgba(255,255,255,.045)}
+  .frow:first-of-type{border-top:0}
+  .frow .k{min-width:104px;font-weight:700;font-size:12.5px;letter-spacing:.2px}
+  .frow .v{color:#c6d0da}
+
+  /* ================= 进度 ================= */
+  .barwrap{margin-top:14px;display:flex;align-items:center;gap:13px}
+  .bar{flex:1;height:12px;background:#080b10;border-radius:99px;overflow:hidden;
+    border:1px solid var(--line);box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}
+  .bar > i{display:block;height:100%;width:0;border-radius:99px;
+    background:linear-gradient(90deg,#3b9dff,#3fb950);transition:width .35s ease;
+    box-shadow:0 0 12px rgba(63,185,80,.35)}
+  .pct{font-size:19px;font-weight:700;min-width:62px;text-align:right;
+    font-variant-numeric:tabular-nums;letter-spacing:.3px}
+
+  /* ================= 任务卡 ================= */
+  .blocks{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:13px;margin-top:15px}
+  .blk{background:linear-gradient(180deg,#171d25,#141920);border:1px solid var(--line);
+    border-radius:var(--r-md);overflow:hidden;
+    transition:border-color .18s,box-shadow .18s,transform .18s}
+  .blk:hover{border-color:var(--line2);box-shadow:0 6px 18px rgba(0,0,0,.28);transform:translateY(-1px)}
+  .blk .hd{display:flex;align-items:center;gap:9px;padding:11px 14px;
+    border-bottom:1px solid var(--line);background:rgba(255,255,255,.014)}
+  .blk .dot{width:9px;height:9px;border-radius:99px}
+  .blk .nm{font-size:15px;font-weight:700;letter-spacing:.2px}
+  .blk .min{margin-left:auto;font-size:11.5px;color:var(--dim);background:var(--card3);
+    border:1px solid var(--line);border-radius:99px;padding:0 8px;font-variant-numeric:tabular-nums}
+  .blk .bd{padding:11px 14px 12px}
+  .blk .wk{font-size:12px;color:#e3b341;background:#1a1508;border:1px solid #3d2f0a;
+    border-radius:var(--r-sm);padding:5px 9px;margin-bottom:9px;line-height:1.55}
+  .daytag{display:inline-block;font-size:10.5px;font-weight:800;color:#0d1117;background:var(--dim);
+    border-radius:4px;padding:0 5px;margin-right:6px;vertical-align:1px;letter-spacing:.2px}
+
+  /* ================= 条目 / 复选框 ================= */
+  ul{list-style:none;display:flex;flex-direction:column;gap:1px}
+  li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:#c6d0da;
+    padding:5px 6px;margin:0 -6px;border-radius:var(--r-sm);line-height:1.62;
+    transition:background .15s,opacity .2s}
+  li:hover{background:rgba(255,255,255,.03)}
+  li input{appearance:none;width:18px;height:18px;min-width:18px;margin-top:2px;
+    border:1.5px solid #3f4a5a;border-radius:6px;cursor:pointer;position:relative;background:#0a0e14;
+    transition:border-color .15s,background .15s,transform .1s}
+  li input:hover{border-color:#5f6f86}
+  li input:active{transform:scale(.92)}
+  li input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  li input:checked{background:var(--green);border-color:var(--green)}
+  li input:checked::after{content:"";position:absolute;left:5.5px;top:2.5px;width:4px;height:8.5px;
+    border:solid #06210f;border-width:0 2.5px 2.5px 0;transform:rotate(43deg);
+    animation:pop .18s ease-out}
+  @keyframes pop{from{transform:rotate(43deg) scale(.35);opacity:0}to{transform:rotate(43deg) scale(1);opacity:1}}
+  li.done{opacity:.55}
+  li.done:hover{opacity:.85;background:transparent}
+  li.done span,li.done .txt{color:var(--dim2);text-decoration:line-through;
+    text-decoration-color:rgba(125,135,148,.7)}
+  li span{cursor:pointer}
+  .blk.complete{border-color:#2f6244;background:linear-gradient(180deg,#141f19,#141920)}
+  .blk.complete .hd{border-bottom-color:#2f6244}
+
+  /* ================= 其它 ================= */
+  .adapt{background:var(--card);border:1px solid #2d3f57;border-left:3px solid var(--blue);
+    border-radius:var(--r-md);padding:13px 16px;margin-top:15px;font-size:13.5px;
+    color:var(--dim);line-height:1.78}
+  .adapt b{color:#79c0ff}
+  .empty{background:var(--card);border:1px dashed var(--line2);border-radius:var(--r-md);
+    padding:34px 20px;text-align:center;color:var(--dim);font-size:14px;margin-top:15px;line-height:2}
+  .tools{display:flex;gap:9px;margin-top:18px;flex-wrap:wrap}
+  .tools button{background:var(--card2);color:var(--text);border:1px solid var(--line);
+    padding:9px 16px;border-radius:var(--r-sm);cursor:pointer;font-size:13px;font-family:inherit;
+    transition:border-color .15s,background .15s}
+  .tools button:hover{border-color:var(--line2);background:#222a34}
+  .tools button:focus-visible,.nav button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+  /* ---- 云同步面板 ---- */
+  .syncbox{margin-top:13px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--r-md);padding:14px 16px}
   .synchead{font-size:14px;font-weight:600;margin-bottom:8px}
   .synchead span{font-weight:400;font-size:12px;color:var(--dim2);margin-left:8px}
   .synctip{font-size:12px;color:var(--dim);line-height:1.8;margin:6px 0 10px}
   .synctip a{color:#58a6ff}
-  .syncbox input[type=password]{width:100%;box-sizing:border-box;background:var(--card2);
-    color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px;
-    font-size:13px;font-family:inherit;margin-bottom:8px}
+  .syncbox input[type=password]{width:100%;background:var(--card3);color:var(--text);
+    border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;
+    font-family:inherit;margin-bottom:8px;transition:border-color .15s,box-shadow .15s}
+  .syncbox input[type=password]:focus{outline:none;border-color:#1f6feb;
+    box-shadow:0 0 0 2px rgba(31,111,235,.25)}
   .syncbox button{background:var(--card2);color:var(--text);border:1px solid var(--line);
-    padding:7px 13px;border-radius:8px;cursor:pointer;font-size:13px;font-family:inherit;
-    margin:0 8px 6px 0}
-  .syncbox button:hover{border-color:#4a5568;background:#232a35}
+    padding:7px 13px;border-radius:var(--r-sm);cursor:pointer;font-size:13px;
+    font-family:inherit;margin:0 8px 6px 0}
+  .syncbox button:hover{border-color:var(--line2);background:#222a34}
   .syncauto{font-size:12px;color:var(--dim);display:block;margin-top:4px}
-  .syncmsg{font-size:12px;min-height:16px;margin-top:6px;color:#3fb950}
-  footer{margin-top:26px;color:var(--dim2);font-size:12px;text-align:center;line-height:1.9}
-  /* ---------- 响应式：窄屏（手机 / 平板竖屏） ---------- */
+  .syncmsg{font-size:12px;min-height:16px;margin-top:6px;color:var(--green)}
+  footer{margin-top:26px;color:var(--dim2);font-size:11.5px;text-align:center;line-height:1.9}
+
+  /* ================= 响应式 ================= */
   @media (max-width: 720px){
-    /* ⭐ 2026-10-17 手机/平板使用：窄屏下长串不换行会把整页撑出横向滚动条，
-       勾选框会被挤出屏幕。这两条是保险，桌面端不受影响。 */
-    body{overflow-x:hidden}
+    body{overflow-x:hidden;padding:14px 12px 72px}
     li, .blk .nm, .wk{overflow-wrap:anywhere;word-break:break-word}
-    .wrap{padding:0 12px}
+    header{padding:15px;border-radius:14px}
     h1{font-size:19px}
-    .meta{gap:10px;font-size:12px}
-    .focus{padding:13px 14px}
-    .frow{flex-direction:column;gap:2px}
-    .frow .k{min-width:0;font-size:11.5px;color:var(--dim2)}
-    .blk{padding:11px 12px}
+    .meta{gap:6px;font-size:11.5px}
+    .meta > span{padding:1px 8px}
+    .focus{padding:12px 13px}
+    .frow{flex-direction:column;gap:3px}
+    .frow .k{min-width:0;font-size:11px;color:var(--dim2)}
+    .blocks{grid-template-columns:1fr;gap:11px}
     .blk .nm{font-size:14px}
     li{font-size:13px}
     .daytag{font-size:10px}
-    .nav{gap:6px}
     .nav button,.nav .navlink{padding:5px 9px;font-size:12px}
-    .pct{font-size:15px;min-width:48px}
+    .pct{font-size:16px;min-width:50px}
   }
   @media (max-width: 420px){
     h1{font-size:17px}
     .nav button,.nav .navlink{padding:4px 7px;font-size:11px}
     li{font-size:12.5px}
   }
-  /* ---------- 平滑滚动 ---------- */
-  html{scroll-behavior:smooth}
-  /* ---------- 勾选后条目变暗，一眼看出进度 ---------- */
-  li.done{opacity:.45}
-  li.done .txt{text-decoration:line-through;text-decoration-color:var(--dim2)}
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important}
+    html{scroll-behavior:auto}
+  }
 </style>
 </head>
 <body>

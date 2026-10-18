@@ -5,137 +5,194 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI 学习规划 · 进度看板</title>
 <style>
+  /* ================= 设计令牌（与今日面板一致） ================= */
   :root{
-    --bg:#0e1116; --card:#161b22; --card2:#1c232c; --line:#283039;
-    --text:#e6edf3; --dim:#9aa7b4; --dim2:#68737f; --green:#3fb950;
+    --bg:#0d1117; --bg2:#090d12;
+    --card:#161b22; --card2:#1b2129; --card3:#0f141b;
+    --line:#232b36; --line2:#313b48;
+    --text:#e8eef5; --dim:#9aa7b4; --dim2:#7d8794;
+    --green:#3fb950; --blue:#58a6ff; --orange:#f0883e;
+    --red:#f85149; --purple:#a371f7; --gold:#e3b341;
+    --r-lg:16px; --r-md:13px; --r-sm:9px;
+    --shadow:0 10px 30px rgba(0,0,0,.34);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);padding:24px 20px 90px;line-height:1.65;
-    font-family:"Microsoft YaHei UI","Microsoft YaHei",system-ui,-apple-system,sans-serif}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{
+    background:
+      radial-gradient(1200px 540px at 10% -12%,#16202e 0%,transparent 62%),
+      radial-gradient(900px 440px at 100% -8%,#131a24 0%,transparent 58%),
+      var(--bg);
+    color:var(--text);padding:22px 20px 90px;line-height:1.66;font-size:15px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",system-ui,sans-serif;
+  }
+  ::selection{background:rgba(88,166,255,.28)}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-track{background:var(--bg2)}
+  ::-webkit-scrollbar-thumb{background:#2b3543;border-radius:99px;border:2px solid var(--bg2)}
+  ::-webkit-scrollbar-thumb:hover{background:#3a4655}
   .wrap{max-width:1500px;margin:0 auto}
 
-  header{background:linear-gradient(135deg,#161d29,#111620);border:1px solid var(--line);
-    border-radius:18px;padding:22px 24px}
-  h1{font-size:24px;font-weight:700}
-  .goal{color:#58a6ff;font-size:14.5px;margin-top:6px}
-  .sub2{color:var(--dim2);font-size:12.5px;margin-top:4px}
+  header{position:relative;overflow:hidden;box-shadow:var(--shadow);
+    background:linear-gradient(135deg,#182130,#121823 58%,#0f141d);
+    border:1px solid var(--line);border-radius:var(--r-lg);padding:20px 22px}
+  header::after{content:"";position:absolute;left:0;right:0;top:0;height:2px;
+    background:linear-gradient(90deg,#3b9dff,#a371f7 50%,rgba(163,113,247,0))}
+  h1{font-size:23px;font-weight:700;letter-spacing:.2px}
+  .goal{color:#79c0ff;font-size:14px;margin-top:6px}
+  .sub2{color:var(--dim2);font-size:12.5px;margin-top:5px;line-height:1.7}
 
-  /* 三轨时间轴 */
+  /* ================= 甘特图 ================= */
   .gantt{margin-top:18px}
   .lane{display:flex;align-items:center;gap:10px;margin-bottom:7px}
-  .laneName{width:88px;font-size:12px;font-weight:700;text-align:right;flex:none}
-  .laneBody{position:relative;flex:1;height:26px;background:#0a0d11;border-radius:7px;
-    border:1px solid var(--line);overflow:hidden}
+  .laneName{width:92px;font-size:12px;font-weight:700;text-align:right;flex:none;letter-spacing:.2px}
+  .laneBody{position:relative;flex:1;height:27px;background:#080b10;border-radius:8px;
+    border:1px solid var(--line);overflow:hidden;
+    background-image:linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);
+    background-size:calc(100% / 27) 100%;
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.45)}
   .seg{position:absolute;top:0;height:100%;display:flex;align-items:center;padding:0 8px;
     font-size:11px;color:#07131f;font-weight:700;white-space:nowrap;overflow:hidden;
-    border-right:1px solid rgba(0,0,0,.25);transition:.15s;cursor:default}
-  .seg:hover{filter:brightness(1.15)}
+    border-right:1px solid rgba(0,0,0,.22);cursor:default;letter-spacing:.1px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -2px 0 rgba(0,0,0,.14);
+    transition:filter .15s}
+  .seg:hover{filter:brightness(1.16)}
   .axis{display:flex;justify-content:space-between;color:var(--dim2);font-size:11px;
-    margin:4px 0 0 98px}
-  /* AI 线类型图例（2026-10-18 用户要求：把机器学习 / 深度学习在甘特图上标出来） */
-  .glegend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0 0 98px;
+    margin:5px 0 0 102px;font-variant-numeric:tabular-nums}
+  .glegend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:9px 0 0 102px;
     font-size:11px;color:var(--dim2);align-items:center}
   .glegend .lgTitle{color:#8b949e;font-weight:700;margin-right:4px}
   .glegend .lg{display:flex;align-items:center;gap:5px}
   .glegend .sw{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}
-  /* 段内小标签：ML / DL / 工程 / 项目 / 暂停 */
   .seg .kind{position:absolute;top:0;right:3px;font-size:8.5px;line-height:1;
-    padding:2px 3px;border-radius:3px;background:rgba(0,0,0,.45);color:#fff;
+    padding:2px 3px;border-radius:3px;background:rgba(0,0,0,.5);color:#fff;
     font-weight:800;letter-spacing:.3px}
   .seg.ml{border-bottom:3px solid #39d353}
   .seg.dl{border-bottom:3px solid #a371f7}
   .seg.proj{border-bottom:3px solid #f0883e}
   .seg.pause{border-bottom:3px solid #484f58}
 
+  /* ================= 总进度 ================= */
   .barwrap{margin-top:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-  .bar{flex:1;min-width:220px;height:12px;background:#0a0d11;border-radius:99px;overflow:hidden;border:1px solid var(--line)}
-  .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3b9dff,#3fb950);transition:width .35s}
-  .pct{font-size:21px;font-weight:700;min-width:70px;text-align:right}
+  .bar{flex:1;min-width:220px;height:13px;background:#080b10;border-radius:99px;overflow:hidden;
+    border:1px solid var(--line);box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}
+  .bar > i{display:block;height:100%;width:0;border-radius:99px;
+    background:linear-gradient(90deg,#3b9dff,#3fb950);transition:width .35s ease;
+    box-shadow:0 0 12px rgba(63,185,80,.35)}
+  .pct{font-size:21px;font-weight:700;min-width:72px;text-align:right;
+    font-variant-numeric:tabular-nums;letter-spacing:.3px}
 
-  .next{margin-top:14px;background:#0c1622;border:1px solid #1d3a55;border-left:4px solid #3b9dff;
-    border-radius:10px;padding:11px 15px;font-size:13.5px}
+  .next{margin-top:14px;background:#0c1622;border:1px solid #1d3a55;border-left:3px solid #3b9dff;
+    border-radius:var(--r-md);padding:11px 15px;font-size:13.5px;line-height:1.7}
   .next b{color:#79c0ff}
 
+  /* ================= 筛选 chips ================= */
   .chips{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 18px}
   .chip{padding:7px 13px;border-radius:99px;border:1px solid var(--line);background:var(--card);
-    font-size:12.5px;cursor:pointer;user-select:none;transition:.15s;display:flex;align-items:center;gap:7px}
-  .chip:hover{border-color:#3d4655}
-  .chip.active{background:#1f2733;border-color:#44546b}
+    font-size:12.5px;cursor:pointer;user-select:none;display:flex;align-items:center;gap:7px;
+    transition:border-color .15s,background .15s,transform .1s}
+  .chip:hover{border-color:var(--line2);background:#1a212a}
+  .chip:active{transform:scale(.97)}
+  .chip.active{background:#1d2530;border-color:#44546b;box-shadow:0 0 0 1px rgba(88,166,255,.22) inset}
   .chip .dot{width:8px;height:8px;border-radius:99px}
-  .chip .n{color:var(--dim2);font-size:11.5px}
+  .chip .n{color:var(--dim2);font-size:11.5px;font-variant-numeric:tabular-nums}
 
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(365px,1fr));gap:14px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
-  .card:hover{border-color:#39424f}
+  /* ================= 卡片 ================= */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px}
+  .card{background:linear-gradient(180deg,#171d25,#141920);border:1px solid var(--line);
+    border-radius:var(--r-md);overflow:hidden;display:flex;flex-direction:column;
+    transition:border-color .18s,box-shadow .18s,transform .18s}
+  .card:hover{border-color:var(--line2);box-shadow:0 8px 22px rgba(0,0,0,.3);transform:translateY(-1px)}
   .card .top{height:4px}
   .inner{padding:14px 16px 16px;display:flex;flex-direction:column;height:100%}
   .row1{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-  .when{font-size:11.5px;color:var(--dim2)}
-  .tk{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:700}
-  .cnt{margin-left:auto;font-size:11.5px;color:var(--dim2)}
-  .ttl{font-size:16px;font-weight:700;margin-top:4px}
-  .deliv{margin-top:8px;font-size:12.5px;padding:6px 10px;border-radius:7px;background:#0d1219;
-    border:1px solid var(--line);color:var(--dim)}
-  .deliv b{color:#e6edf3;font-weight:600}
+  .when{font-size:11.5px;color:var(--dim2);font-variant-numeric:tabular-nums}
+  .tk{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:700;letter-spacing:.2px}
+  .cnt{margin-left:auto;font-size:11.5px;color:var(--dim2);font-variant-numeric:tabular-nums}
+  .ttl{font-size:16px;font-weight:700;margin-top:5px;letter-spacing:.2px;line-height:1.45}
+  .deliv{margin-top:9px;font-size:12.5px;padding:7px 10px;border-radius:var(--r-sm);
+    background:var(--card3);border:1px solid var(--line);color:var(--dim);line-height:1.65}
+  .deliv b{color:#e8eef5;font-weight:600}
   .ky{margin-top:8px;font-size:12px;color:#d29922;background:#1a1508;border:1px solid #3d2f0a;
-    border-radius:7px;padding:5px 9px}
+    border-radius:var(--r-sm);padding:6px 9px;line-height:1.6}
   .ky b{color:#e3b341}
-  .tag{margin-top:8px;font-size:11.5px;color:#8b949e;background:#0d1219;border:1px dashed #2a323c;
-    border-radius:7px;padding:5px 9px}
+  .tag{margin-top:8px;font-size:11.5px;color:#8b949e;background:var(--card3);
+    border:1px dashed #2a323c;border-radius:var(--r-sm);padding:6px 9px;line-height:1.6}
 
-  ul{list-style:none;margin-top:12px;display:flex;flex-direction:column;gap:7px}
-  li{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:#c9d3dd}
-  li input{appearance:none;width:17px;height:17px;min-width:17px;margin-top:3px;border:1.5px solid #3f4a5a;
-    border-radius:5px;cursor:pointer;position:relative;transition:.15s;background:#0b0f14}
-  li input:hover{border-color:#5b6a80}
+  ul{list-style:none;margin-top:12px;display:flex;flex-direction:column;gap:1px}
+  li{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:#c6d0da;
+    padding:4px 6px;margin:0 -6px;border-radius:var(--r-sm);line-height:1.62;
+    transition:background .15s,opacity .2s}
+  li:hover{background:rgba(255,255,255,.03)}
+  li input{appearance:none;width:18px;height:18px;min-width:18px;margin-top:2px;
+    border:1.5px solid #3f4a5a;border-radius:6px;cursor:pointer;position:relative;background:#0a0e14;
+    transition:border-color .15s,background .15s,transform .1s}
+  li input:hover{border-color:#5f6f86}
+  li input:active{transform:scale(.92)}
+  li input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
   li input:checked{background:var(--green);border-color:var(--green)}
-  li input:checked::after{content:"";position:absolute;left:5px;top:2px;width:4px;height:8.5px;
-    border:solid #06210f;border-width:0 2.5px 2.5px 0;transform:rotate(43deg)}
-  li.done span{color:var(--dim2);text-decoration:line-through}
+  li input:checked::after{content:"";position:absolute;left:5.5px;top:2.5px;width:4px;height:8.5px;
+    border:solid #06210f;border-width:0 2.5px 2.5px 0;transform:rotate(43deg);
+    animation:pop .18s ease-out}
+  @keyframes pop{from{transform:rotate(43deg) scale(.35);opacity:0}to{transform:rotate(43deg) scale(1);opacity:1}}
+  li.done{opacity:.55}
+  li.done:hover{opacity:.85;background:transparent}
+  li.done span,li.done .txt{color:var(--dim2);text-decoration:line-through;
+    text-decoration-color:rgba(125,135,148,.7)}
   li span{cursor:pointer}
 
   details{margin-top:11px;border-top:1px dashed #2a323c;padding-top:10px}
-  summary{cursor:pointer;font-size:12.5px;color:#e3b341;list-style:none;user-select:none}
+  summary{cursor:pointer;font-size:12.5px;color:#e3b341;list-style:none;user-select:none;transition:color .15s}
+  summary:hover{color:#f0cc5f}
   summary::-webkit-details-marker{display:none}
   summary::before{content:"▸ ";font-size:11px}
   details[open] summary::before{content:"▾ "}
   details ul li{font-size:12.5px}
 
-  .card.complete{border-color:#2c5a3d;background:linear-gradient(180deg,#131e17,#161b22)}
+  .card.complete{border-color:#2f6244;background:linear-gradient(180deg,#131e17,#141920)}
   .card.complete .ttl::after{content:" ✓";color:var(--green)}
 
   .tools{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
   button{background:var(--card2);color:var(--text);border:1px solid var(--line);padding:9px 16px;
-    border-radius:9px;cursor:pointer;font-size:13px;font-family:inherit;transition:.15s}
-  button:hover{border-color:#4a5568;background:#232a35}
-  footer{margin-top:30px;color:var(--dim2);font-size:12px;text-align:center;line-height:1.9}
-  /* ---------- 响应式：窄屏 ---------- */
-  @media (max-width: 760px){
-    .wrap{padding:16px 12px 40px}
-    h1{font-size:19px}
-    .grid{grid-template-columns:1fr}
-    /* 归档区（2026-10-18）：已并入/保留备查的历史卡折在这里，不干扰视线，也不计入总进度 */
+    border-radius:var(--r-sm);cursor:pointer;font-size:13px;font-family:inherit;
+    transition:border-color .15s,background .15s}
+  button:hover{border-color:var(--line2);background:#222a34}
+  button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  footer{margin-top:30px;color:var(--dim2);font-size:11.5px;text-align:center;line-height:1.9}
+
+  /* ---- 归档区（已并入/保留备查的历史卡） ---- */
   .archbox{margin-top:22px}
-  .archbox > details{background:#0f141a;border:1px solid var(--line);border-radius:12px;padding:2px 14px}
+  .archbox > details{background:#0f141a;border:1px solid var(--line);border-radius:var(--r-md);padding:2px 14px}
   .archbox summary{cursor:pointer;color:var(--dim2);font-size:13px;padding:11px 0;list-style:none}
   .archbox summary::-webkit-details-marker{display:none}
   .archbox summary::before{content:"▸ ";color:var(--dim2)}
   .archbox details[open] summary::before{content:"▾ "}
   .archbox .archgrid{margin:6px 0 14px;opacity:.62}
   .archbox .card .top{opacity:.5}
-  .gantt .row{grid-template-columns:76px 1fr}
+
+  /* ================= 响应式 ================= */
+  @media (max-width: 760px){
+    body{padding:14px 12px 56px}
+    h1{font-size:19px}
+    .grid{grid-template-columns:1fr}
+    .laneName{width:76px;font-size:11px}
+    .axis,.glegend{margin-left:86px}
     .chips{gap:6px}
-    .chip{padding:4px 9px;font-size:12px}
+    .chip{padding:5px 10px;font-size:12px}
     .goal,.sub2{font-size:12px}
     li{font-size:12.5px}
     .tools button{padding:8px 12px;font-size:12px}
+    .pct{font-size:17px;min-width:56px}
   }
   @media (max-width: 430px){
     h1{font-size:17px}
-    .chip{padding:3px 7px;font-size:11px}
+    .chip{padding:4px 8px;font-size:11px}
     .gantt{font-size:10px}
   }
-  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important}
+    html{scroll-behavior:auto}
+  }
 </style>
 </head>
 <body>
@@ -708,8 +765,10 @@ const CARDS = [
 
   {track:"cs408", when:"2027.06.21 – 06.27（面板 W35–W36，2 周）",
    title:"408 串联：四门交叉考点 + 整卷模拟",
+   deliv:"四门能串成一张图 + 720 min 整卷模拟出分（每门大题各 1 道能独立写完）",
    notes:"四门学完 + 15 年真题做完后必须做的一件事：<b>把四门连起来</b>——<br>① 四门框架图各画一张；② Cache×虚拟内存（虚地址→TLB→物理→Cache）；<br>③ 中断×系统调用×特权级（一个 read() 走完全程）；④ TCP×OS 缓冲×DMA。<br>最后一两天做整卷模拟（180 min 严格计时）。",
-   tasks:["四门框架图各画一张（数据结构/组原/OS/网络）","Cache × 虚拟内存 全流程手推一遍","一个 read() 从用户态到磁盘的完整路径讲清楚","TCP × OS 缓冲 × DMA 收发一个包的全路径","408 真题：大题 4 道（四门各 1）","408 整卷模拟 180 min（严格计时）","错题总清算：36 周错题本里标 ★ 的重做","定「暑期强化」要补的清单"]},
+   tasks:["四门框架图各画一张（数据结构/组原/OS/网络）","Cache × 虚拟内存 全流程手推一遍","一个 read() 从用户态到磁盘的完整路径讲清楚","TCP × OS 缓冲 × DMA 收发一个包的全路径","408 真题：大题 4 道（四门各 1）","408 整卷模拟 180 min（严格计时）","错题总清算：36 周错题本里标 ★ 的重做","定「暑期强化」要补的清单"],
+   quiz:["不看资料能把四门框架图各画出来吗？","Cache×虚拟内存那条链我能在纸上走完吗？","这次整卷模拟多少分，最弱是哪一门？"]},
 {track:"cs408", when:"2027.09 – 2028.03", title:"408⑤ 二轮：四本重刷 + 错题本", deliv:"四本二轮完成，错题清零一轮",
   kaoyan:"暑假每周 3h 维护（共 27h）已把遗忘曲线压平，9 月开局直接进二轮，不回炉重讲。",
   tasks:["按 数据结构 → 组成原理 → 操作系统 → 网络 的顺序二刷","只看第一轮标记的难点 + 课后错题","王道《408 真题》按科目分类部分（面板 W30–W35 已做过一轮整卷，这里按科目补漏）","整理高频考点清单（考前就看这个）"],
@@ -853,7 +912,7 @@ function render(){
   CARDS.forEach((c, ci) => {
     if (filterTrack && c.track !== filterTrack) return;
     const t = TRACKS[c.track];
-    const all = c.tasks.map((_, ti) => uid(ci, ti, "t")).concat(c.quiz.map((_, ti) => uid(ci, ti, "q")));
+    const all = (c.tasks || []).map((_, ti) => uid(ci, ti, "t")).concat((c.quiz || []).map((_, ti) => uid(ci, ti, "q")));
     const done = all.filter(k => state[k]).length;
     const complete = all.length > 0 && done === all.length;
 
@@ -868,12 +927,12 @@ function render(){
           '<span class="cnt">' + done + "/" + all.length + "</span>" +
         "</div>" +
         '<div class="ttl">' + c.title + "</div>" +
-        '<div class="deliv">产出：<b>' + c.deliv + "</b></div>" +
+        '<div class="deliv">产出：<b>' + (c.deliv || "—") + "</b></div>" +
         (c.kaoyan ? '<div class="ky">' + c.kaoyan + "</div>" : "") +
         "<ul></ul>" +
       "</div>";
-    makeList(el.querySelector("ul"), c.tasks, ci, "t");
-    if (c.quiz.length){
+    makeList(el.querySelector("ul"), c.tasks || [], ci, "t");
+    if ((c.quiz || []).length){
       const det = document.createElement("details");
       det.innerHTML = "<summary>自测（能不看资料答出来再打勾）</summary><ul></ul>";
       makeList(det.querySelector("ul"), c.quiz, ci, "q");
@@ -928,9 +987,9 @@ function updateStats(){
     let total = 0, d = 0;
     idxs.forEach(i => {
       const c = CARDS[i];
-      total += c.tasks.length + c.quiz.length;
-      c.tasks.forEach((_, ti) => { if (state[uid(i, ti, "t")]) d++; });
-      c.quiz.forEach((_, ti) => { if (state[uid(i, ti, "q")]) d++; });
+      total += (c.tasks || []).length + (c.quiz || []).length;
+      (c.tasks || []).forEach((_, ti) => { if (state[uid(i, ti, "t")]) d++; });
+      (c.quiz || []).forEach((_, ti) => { if (state[uid(i, ti, "q")]) d++; });
     });
     const t = TRACKS[tid];
     const c2 = document.createElement("div");
