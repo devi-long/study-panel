@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>学习面板 · 入口</title>
+<style>
+  :root{ color-scheme: dark; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    margin:0; min-height:100vh; background:#0d1117; color:#e6edf3;
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .wrap{ width:100%; max-width:520px; }
+  h1{ font-size:20px; font-weight:600; margin:0 0 6px; }
+  .sub{ color:#8b949e; font-size:13px; margin:0 0 22px; }
+  a.card{
+    display:block; text-decoration:none; color:inherit;
+    background:#161b22; border:1px solid #30363d; border-radius:14px;
+    padding:20px 22px; margin-bottom:14px; transition:border-color .15s, background .15s;
+  }
+  a.card:active{ background:#1c2430; border-color:#3fb950; }
+  .t{ font-size:18px; font-weight:600; margin-bottom:4px; }
+  .d{ font-size:13px; color:#8b949e; }
+  .dot{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:9px; vertical-align:1px; }
+  .note{ font-size:12px; color:#6e7681; line-height:1.7; margin-top:20px; }
+  @media (min-width:721px){
+    a.card:hover{ border-color:#3fb950; background:#1c2430; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>学习面板</h1>
+  <p class="sub">选一个打开 · 勾选进度存在这台设备的浏览器里</p>
+
+  <a class="card" href="今日面板.html">
+    <div class="t"><span class="dot" style="background:#3fb950"></span>今日面板</div>
+    <div class="d">今天该学什么 · 逐条勾选 · 本周和全程进度</div>
+  </a>
+
+  <a class="card" href="进度看板.html">
+    <div class="t"><span class="dot" style="background:#58a6ff"></span>进度看板</div>
+    <div class="d">27 个月甘特图 · 六个方向 · 每个节点做什么</div>
+  </a>
+
+  <p class="note">
+    进度按「地址」分开存：<br>
+    电脑用 localhost 打开、手机用 192.168.x.x 打开，是两份独立记录。<br>
+    想同步 → 在面板里点「⬇️ 导出备份」，在另一台点「⬆️ 导入」。<br><br>
+    建议把本页「添加到主屏幕」，下次一点就开。
+  </p>
+</div>
+</body>
+</html>
