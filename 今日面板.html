@@ -122,6 +122,54 @@
   .blk.complete{border-color:#2f6244;background:linear-gradient(180deg,#141f19,#141920)}
   .blk.complete .hd{border-bottom-color:#2f6244}
 
+  /* ================= 📦 采购清单卡（2026-10-18 加） =================
+     不算学习时长、不进 weekTotal，只存在于 W1（10-19 ~ 10-25）这个窗口。 */
+  .pkg{margin-top:15px;background:linear-gradient(180deg,#171d25,#141920);
+    border:1px solid #2d3f57;border-left:3px solid #d29922;border-radius:var(--r-md);padding:14px 16px}
+  .pkg h2{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .pkg h2 .cnt2{font-size:11.5px;font-weight:700;color:#0d1117;background:var(--gold);
+    border-radius:99px;padding:1px 8px}
+  .pkg .sub{font-size:12px;color:var(--dim2);margin:5px 0 10px;line-height:1.7}
+  .pkg .row{display:flex;gap:10px;align-items:flex-start;padding:6px;margin:0 -6px;
+    border-radius:var(--r-sm);transition:background .15s}
+  .pkg .row:hover{background:rgba(255,255,255,.03)}
+  .pkg .row input{appearance:none;width:18px;height:18px;min-width:18px;margin-top:2px;
+    border:1.5px solid #3f4a5a;border-radius:6px;cursor:pointer;position:relative;background:#0a0e14;
+    transition:border-color .15s,background .15s,transform .1s}
+  .pkg .row input:hover{border-color:#5f6f86}
+  .pkg .row input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .pkg .row input:checked{background:var(--green);border-color:var(--green)}
+  .pkg .row input:checked::after{content:"";position:absolute;left:5.5px;top:2.5px;width:4px;height:8.5px;
+    border:solid #06210f;border-width:0 2.5px 2.5px 0;transform:rotate(43deg)}
+  .pkg .q{flex:none;width:18px;height:18px;margin-top:2px;border-radius:5px;background:#233043;
+    color:#8fb8e8;font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .pkg .txt{font-size:13.5px;color:#c6d0da;line-height:1.6;flex:1}
+  .pkg .due{display:inline-block;font-size:11px;font-weight:700;color:#e3b341;background:#1a1508;
+    border:1px solid #3d2f0a;border-radius:99px;padding:0 7px;margin-left:6px;white-space:nowrap;
+    font-variant-numeric:tabular-nums}
+  .pkg .due.hot{color:#ff7b72;background:#2a1518;border-color:#6b2f33}
+  .pkg .row.done .txt{color:var(--dim2);text-decoration:line-through;
+    text-decoration-color:rgba(125,135,148,.7)}
+  .pkg .row.done .q{background:#1a2a20;color:#3fb950}
+  .pkg .bar2{height:7px;background:#080b10;border-radius:99px;overflow:hidden;
+    border:1px solid var(--line);margin:10px 0 2px}
+  .pkg .bar2 > i{display:block;height:100%;width:0;border-radius:99px;
+    background:linear-gradient(90deg,#d29922,#3fb950);transition:width .3s}
+  .pkg details{margin-top:12px;border-top:1px dashed #2a323c;padding-top:10px}
+  .pkg summary{cursor:pointer;font-size:12.5px;color:#e3b341;list-style:none;user-select:none}
+  .pkg summary::-webkit-details-marker{display:none}
+  .pkg summary::before{content:"▸ ";font-size:11px}
+  .pkg details[open] summary::before{content:"▾ "}
+  .pkg .later,.pkg .no{font-size:12.5px;color:var(--dim);line-height:1.9;margin-top:7px}
+  .pkg .later b{color:#c6d0da}
+  .pkg .no{margin-top:10px;padding-top:9px;border-top:1px dashed #2a323c}
+  .pkg .no b{color:#ff9a91}
+  @media (max-width:720px){
+    .pkg{padding:12px 13px}
+    .pkg .txt{font-size:13px}
+    .pkg .due{display:block;margin:3px 0 0;width:fit-content}
+  }
+
   /* ================= 其它 ================= */
   .adapt{background:var(--card);border:1px solid #2d3f57;border-left:3px solid var(--blue);
     border-radius:var(--r-md);padding:13px 16px;margin-top:15px;font-size:13.5px;
@@ -204,6 +252,7 @@
   </header>
   <div class="adapt" id="adaptBox" style="display:none"></div>
   <div class="blocks" id="blocks"></div>
+  <div class="pkg" id="pkgBox" style="display:none"></div>
   <div class="empty" id="emptyBox" style="display:none"></div>
   <div style="text-align:center;margin-top:14px">
     <button id="previewBtn" onclick="startPreview(nextActiveOffset())" style="display:none;background:#1c232c;color:#e6edf3;border:1px solid #4a5568;border-radius:9px;padding:9px 18px;cursor:pointer;font-size:13px;font-family:inherit">👀 跳到下一个有内容的日子（试勾，不影响正式进度）</button>
@@ -3476,6 +3525,108 @@ function auditKeys(renderKeys, dow, adapting, fin, w, wi){
 }
 let auditNote = "";
 
+/* ---------------- 📦 W1 采购清单（2026-10-18 加） ----------------
+   为什么不塞进 blocks：它不产生学习时长，塞进去会拉高 weekTotal、
+   把进度分母搞乱，10-19 那条「渲染 7 条以上」的断言也会被带偏。
+   状态单独存 dsh-pkg-v1（不跟日期绑定），全勾完自动隐藏。 */
+const PKG_FROM = parseDay("2026-10-19");
+const PKG_TO   = parseDay("2026-10-25");
+const PKG_KEY  = "dsh-pkg-v1";
+const PKG_NOW = [
+  {k:"p1", q:1, t:"确认张宇视频来源（全套 151.5 h：高数 100.8 / 线代 30.4 / 概率 20.3）", due:"今天", hot:1},
+  {k:"p2", q:2, t:"张宇《基础30讲》三册（高数 / 线代 / 概率 · 数一版）", due:"10-21 前到"},
+  {k:"p3", q:3, t:"张宇《1000 题》基础篇（数一）—— 第一轮唯一的做题载体", due:"10-21 前到"},
+  {k:"p4", q:4, t:"王道《数据结构》", due:"10-21 前到"},
+  {k:"p5", q:5, t:"红宝书（考研英语词汇）", due:"10-21 前到"},
+  {k:"p6", q:6, t:"A4 草稿纸 2 包 + A5 活页本（当「薄弱清单」用）", due:"10-20 前到"},
+  {k:"p7", q:7, t:"四级真题 16 套（W1–W8 冲刺，12-12 考试）", due:"10-25 前到"},
+  {k:"p8", q:8, t:"王道《计算机组成原理》（W10 才用，但寒假要加速 → 现在屯）", due:"10-25 前到"},
+  {k:"p9", q:9, t:"计时器 / 手机倒计时（408 整卷 180 min、蓝桥 4h、阅读限时都靠它）", due:"10-25 前"}
+];
+const PKG_LATER = [
+  ["12 月中（四级考完）", "英一真题（近 20 年）—— W14 起每天 1 篇真题阅读，寒假前必须到手"],
+  ["2027.01 寒假", "王道《408 真题》（15 年 2010–2024）—— W30–W35 整卷模拟就靠它"],
+  ["2027.03", "蓝桥杯省赛报名（2027-04-10，约 300 元；先问学校/教练能不能减免）"],
+  ["2027.06", "王道《操作系统》《计算机网络》—— W18 / W23 才开这两门"],
+  ["2027.09", "张宇《660 题》—— 2027.9–2028.1「基础篇扫尾 + 30 讲二刷」的题源"],
+  ["2028.02", "张宇《强化 36 讲》+《提高篇》—— 两本必须一起买，提高篇只配强化用"],
+  ["2028.07", "政治全套（当年版）+ 英一作文 —— 政治 2028.7 才起，早买必然过时"],
+  ["2028.09", "英一近 10 年套卷 + 作文书 + 模拟卷 —— 冲刺阶段"]
+];
+const PKG_NO = ["六级新资料（已有 28 条，够用到 2027-06）",
+  "政治（任何版本，2028.7 前买都会过时）",
+  "张宇《提高篇》单独提前买（会破坏「基础轮只做基础篇」）",
+  "408 网课（计划是王道书自学 + 真题）",
+  "显卡 / GPU（手写 GPT 用 Colab / Kaggle 免费额度就够）"];
+
+let pkgState = null;
+function pkgLoad(){
+  if (pkgState) return pkgState;
+  try { pkgState = JSON.parse(lsGet(PKG_KEY) || "{}") || {}; } catch(e){ pkgState = {}; }
+  if (typeof pkgState !== "object" || pkgState === null) pkgState = {};
+  return pkgState;
+}
+function pkgSave(){ try { lsSet(PKG_KEY, JSON.stringify(pkgState || {})); } catch(e){} }
+function pkgToggle(k){
+  const st = pkgLoad();
+  if (st[k]) delete st[k]; else st[k] = 1;
+  pkgSave();
+  const box = document.getElementById("pkgBox");
+  if (!box) return;
+  /* 原地更新，不重建整张卡：重建会把手里的 input 变成游离节点，
+     连续点几下就只有第一下生效。 */
+  box.querySelectorAll(".row").forEach(r => {
+    const inp = r.querySelector("input");
+    if (!inp) return;
+    const on = !!st[inp.getAttribute("data-k")];
+    inp.checked = on;
+    if (on) r.classList.add("done"); else r.classList.remove("done");
+  });
+  const leftN = PKG_NOW.filter(x => !st[x.k]).length;
+  const cnt = box.querySelector(".cnt2");
+  if (cnt) cnt.textContent = (PKG_NOW.length - leftN) + "/" + PKG_NOW.length;
+  const bar = box.querySelector(".bar2 > i");
+  if (bar) bar.style.width = Math.round((PKG_NOW.length - leftN) / PKG_NOW.length * 100) + "%";
+  if (leftN === 0){ box.style.display = "none"; box.innerHTML = ""; }
+}
+function renderPkg(){
+  const box = document.getElementById("pkgBox");
+  if (!box) return;
+  const left = PKG_NOW.filter(x => !pkgLoad()[x.k]).length;
+  /* 只在 W1 显示；全买齐后自动收起来，不占视线 */
+  const inWin = (cur >= PKG_FROM && cur <= PKG_TO);
+  if (!inWin || left === 0){
+    box.style.display = "none";
+    box.innerHTML = "";
+    return;
+  }
+  box.style.display = "block";
+  const st = pkgLoad();
+  const doneN = PKG_NOW.length - left;
+  let h = '<h2>📦 W1 采购清单' +
+          '<span class="cnt2">' + doneN + "/" + PKG_NOW.length + "</span>" +
+          '<span style="font-size:12px;font-weight:400;color:#9aa7b4">这批约 450–550 元 · 按编号顺序下单</span></h2>' +
+          '<div class="sub">书不到，W1 的数学和 408 就跑不起来 —— ' +
+          '<b style="color:#ff7b72">第 1 条是唯一会卡住开局的事</b>，先确认它。</div>';
+  PKG_NOW.forEach(x => {
+    const on = !!st[x.k];
+    h += '<div class="row' + (on ? " done" : "") + '">' +
+         '<input type="checkbox" data-k="' + x.k + '"' + (on ? " checked" : "") + ">" +
+         '<span class="q">' + x.q + "</span>" +
+         '<span class="txt">' + esc(x.t) +
+         '<span class="due' + (x.hot ? " hot" : "") + '">' + esc(x.due) + "</span></span></div>";
+  });
+  h += '<div class="bar2"><i style="width:' + Math.round(doneN / PKG_NOW.length * 100) + '%"></i></div>';
+  h += '<details><summary>后面按时间点买（现在别下单，囤了只会占地方/过时）</summary><div class="later">' +
+       PKG_LATER.map(([w, t]) => "<b>" + esc(w) + "</b> → " + esc(t)).join("<br>") +
+       "</div></details>";
+  h += '<div class="no"><b>明确别买：</b>' + PKG_NO.map(esc).join(" · ") + "</div>";
+  box.innerHTML = h;
+  box.querySelectorAll(".row input").forEach(inp => {
+    inp.addEventListener("change", () => pkgToggle(inp.getAttribute("data-k")));
+  });
+}
+
 function render(){
   loadState();
   persistOK = true;
@@ -3492,6 +3643,7 @@ function render(){
   const blocks = dayBlocks(dow, w, adapting, fin, wi, cur);
   /* 「课上加时」只在课表已知窗口内存在（≤ 2027-01-24）；之后转成 408 自学时间 */
   const classKnown = !fin && cur <= CLASS_KNOWN_TO;
+  renderPkg();   /* 📦 W1 采购清单：只在 10-19~10-25 出现，全勾完自动收起 */
 
   document.getElementById("dateTitle").textContent =
     fmt(cur) + " · " + WD[dow] + (isToday ? "（今天）" : "");
