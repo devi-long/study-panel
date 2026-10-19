@@ -3919,10 +3919,22 @@ function weekdayTemplate(dow, fin, d){
 /* 统计某一天会用到的 key（必须与渲染完全一致）
    ⭐ 2026-10-17：加 d（那一天的日期）—— 数学块在缓冲期是 2 条、非缓冲期是 1~2 条，
      原来按「今天」算，会让缓冲周的「本周/全程」总数统计错。 */
+/* 勾选键 = 条目文字的哈希（djb2）。原来用「块序:条序」，一旦改条目就会让旧勾
+   错位到别的任务上 —— 错位比丢失更糟，所以改成按内容认。
+   同一天同一段文字出现两次时，第二个加 -2 后缀。 */
+function itemKey(text, seen){
+  const str = String(text);
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+  const k = (h >>> 0).toString(36);
+  seen[k] = (seen[k] || 0) + 1;
+  return seen[k] > 1 ? k + "-" + seen[k] : k;
+}
+
 function statKeys(dow, w, adapting, fin, wi, d){
-  const keys = [];
+  const keys = [], seen = {};
   dayBlocks(dow, w, adapting, fin, wi, d).forEach(blk => {
-    blk.items.forEach((_, ii) => keys.push(blk.bi + ":" + ii));
+    blk.items.forEach(t => keys.push(itemKey(t, seen)));
   });
   return keys;
 }
@@ -4240,6 +4252,7 @@ function render(){
 
   let total = 0, done = 0;
   const renderKeys = [];
+  const seenKey = {};          /* itemKey 的去重计数，必须每天重置 */
   blocks.forEach((b) => {
     const bi = b.bi;
     const items = b.items;
@@ -4282,7 +4295,8 @@ function render(){
     const ul = el.querySelector("ul");
     let bDone = 0;
     items.forEach((t, ii) => {
-      const id = bi + ":" + ii;
+      const id = itemKey(t, seenKey);
+      renderKeys.push(id);
       const marked = isMarked(id);
       if (marked) bDone++;
       const li = document.createElement("li");
@@ -4306,6 +4320,15 @@ function render(){
     if (items.length && bDone === items.length) el.classList.add("complete");
     box.appendChild(el);
   });
+
+  /* 改过条目后，旧键会留在 localStorage 里让「本周完成」虚高 → 每次渲染顺手清掉 */
+  if (!preview){
+    const alive = {};
+    renderKeys.forEach(k => { alive[k] = 1; });
+    let dirty = false;
+    Object.keys(state).forEach(k => { if (!alive[k]) { delete state[k]; dirty = true; } });
+    if (dirty) saveState();
+  }
 
   const pct = total ? Math.round(done / total * 100) : 0;
   document.getElementById("barfill").style.width = pct + "%";
