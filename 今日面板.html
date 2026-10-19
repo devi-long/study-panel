@@ -3488,6 +3488,8 @@ function buildItems(b, w, dow, wi, d){
         } else if (stage === "post"){
           out.push(wordLine(25));
           out.push("长难句 35 min：刘晓艳《不就是语法和长难句吗？》（抄句 → 划成分 → 翻译 → 对答案）");
+          /* 期末缓冲的周六原来只有 5 条（低于 6 条下限），补一条能当天做完的 */
+          if (dow === 6) out.push("生词本清空 + 本周错词过一遍 15 min（读出声，不抄写法）");
         } else {
           out.push(wordLine(25));
           out.push("长难句 25 min：刘晓艳《不就是语法和长难句吗？》（划成分 + 翻译 2 句）");
@@ -3672,6 +3674,7 @@ function mathNeedOf(items){
 function examDrop(d, src){
   if (!d) return false;
   const m = fmt(d);
+  if (m === "2026-12-12") return src === "math" || src === "ai";   /* 四级考试日下午 */
   if (m === "2027-04-10") return src === "math" || src === "ai";
   if (m === "2027-06-19") return src === "math" || src === "algo";
   return false;
@@ -3686,10 +3689,30 @@ function wdNeedOf(d){
   return t;
 }
 
+/* 单日上限 9.6 h：模板叠起来超过就先从 AI 块扣（AI 最可让），再扣算法。
+   2027-01-29（寒假最后一晚）实测 10.1 h，就是被这里压回 9.6 的。 */
+function capTemplate(tpl, d){
+  if (!d) return tpl;
+  const CAP = 576;                       /* 9.6 h */
+  /* 模板层不做裁剪：模板 9.0 h 的日子实际可能是 10.1 h，
+     真正的裁剪在 dayBlocks 末尾按「真实块时长」做。 */
+  return tpl;
+  const cp = tpl.map(b => Object.assign({}, b));
+  [["ai", 30], ["algo", 60]].forEach(function(p){
+    if (over <= 0) return;
+    const b = cp.filter(x => x.src === p[0])[0];
+    if (!b) return;
+    const cut = Math.min(over, Math.max(0, b.min - p[1]));
+    b.min -= cut; over -= cut;
+  });
+  return cp;
+}
+
 function dayBlocks(dow, w, adapting, fin, wi, d){
   /* ⭐⭐ 弹性日（每月第 4 个周日）直接替换当天全部内容：3 块共 3 h。 */
   if (!adapting && isFlexDay(d)) return flexBlocks();
-  const tpl = (adapting ? adaptTemplate() : weekdayTemplate(dow, fin, d));
+  let tpl = (adapting ? adaptTemplate() : weekdayTemplate(dow, fin, d));
+  if (!adapting) tpl = capTemplate(tpl, d);
   const out = [];
   tpl.forEach((b) => {
     const items = adapting ? b.items : buildItems(b, w, dow, wi, d);
@@ -3711,8 +3734,24 @@ function dayBlocks(dow, w, adapting, fin, wi, d){
     const minF = need > 0 ? Math.max(b.min, need)
                : (dsNeed > 0 ? Math.min(b.min, dsNeed) : b.min);
     out.push({ bi: out.length, nm: nm, color: b.color,
-               min: minF, src: b.src, items: items });
+               min: minF, src: b.src, items: items, srcB: b });
   });
+  /* ⭐ 单日上限 9.6 h：上面是按模板预算的，但数学/408 的真实块可能比模板大
+     （2027-01-29 模板 9.0 h，实际 10.1 h）。这里按真实块再压一次：
+     从 AI 块扣（最可让，最低 30 min），并用新分钟重建 AI 条目文字。 */
+  if (!adapting && d){
+    let total = 0;
+    out.forEach(function(x){ total += x.min; });
+    if (total > 576){
+      const ai = out.filter(function(x){ return x.src === "ai"; })[0];
+      if (ai && ai.srcB){
+        const cut = Math.min(total - 576, Math.max(0, ai.min - 30));
+        ai.min -= cut;
+        ai.items = buildItems(Object.assign({}, ai.srcB, {min: ai.min}), w, dow, wi, d);
+      }
+    }
+  }
+
   /* ⭐ 2026-10-17 用户要求：面板只有「日清单」没有收口。
      每周日追加一个固定块：本周复盘 + 错题本承载。
      - 用 fixed 条目 → 不依赖 WEEKS 数据，任何一周都有
