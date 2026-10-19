@@ -3638,9 +3638,29 @@ function buildItems(b, w, dow, wi, d){
     out.push(tag + "408 真题/复习：" + DS_REVIEW[dow]);
     return out;
   } else if (b.src === "algo"){
-    pick(w && w.algo, dow).forEach(x => out.push(x));
+    /* 算法块的分钟数要能对上题量：写明「看/学 → 自己推 → 计时手写」。
+       一天有多条时只有第一条承担分配，其余的扣掉其已声明分钟，避免重复计算。 */
+    const alM = b.min || 120;
+    const alItems = pick(w && w.algo, dow);
+    let other = 0;
+    alItems.slice(1).forEach(function(x){
+      const mm = String(x).match(/([0-9]+) ?min/);
+      if (mm) other += Number(mm[1]);
+    });
+    const lead = Math.max(20, alM - other);
+    const g1 = Math.round(lead * 0.3), g2 = Math.round(lead * 0.5), g3 = lead - g1 - g2;
+    alItems.forEach(function(x, i){
+      if (i > 0){ out.push(x); return; }
+      out.push(x + "（这块 " + lead + " min：看/学 " + g1 + " → 自己推 " + g2
+        + "（不看模板写出来）→ 计时手写 " + g3 + "（复现一遍再对拍））");
+    });
   } else if (b.src === "ai"){
-    pick(aiOf(w, wi), dow).forEach(x => out.push(x));
+    /* 一条 AI 任务要撑起整块时间：写清「学 / 练 / 记」各多少分钟，
+       否则 60 min 块配一句「各写一个小程序」，等于又回到「时间超过内容」。 */
+    const aiM = b.min || 30;
+    const a1 = Math.round(aiM * 0.35), a2 = Math.round(aiM * 0.5), a3 = aiM - a1 - a2;
+    pick(aiOf(w, wi), dow).forEach(x => out.push(x
+      + "（今天就这块 " + aiM + " min：学 " + a1 + " → 自己写 " + a2 + "（能跑、改 3 个参数看结果）→ 记 " + a3 + "（3 行笔记：会了/卡点/明天先做））"));
   } else if (b.src === "math"){
     mathItems(dow, d, b.min).forEach(x => out.push(x));
   }
