@@ -3194,6 +3194,13 @@ function dsLabelFor(items, w, fin){
   return base.replace("（期末复习）", "") + " + " + extra.join(" + ");
 }
 
+/* 六级阶段的「本周是否真有六级听力材料」：enMaterial[0] 里有「听力」才算。
+   W14–W22 那几周 en[0] 是「真题阅读起步」，不是听力 → 不排听力条目。 */
+function en6RealListening(w){
+  const m = (w && w.enMaterial && w.enMaterial[0]) || "";
+  return /听力/.test(m);
+}
+
 function buildItems(b, w, dow, wi, d){
   if (b.fixed) return b.fixed.slice();
   const out = [];
@@ -3221,8 +3228,8 @@ function buildItems(b, w, dow, wi, d){
         out.push("单词 30 min：四级核心词（最后一天，下周起换考研红宝书）");
         out.push("阅读 30 min：四级阅读真题 1 篇（保持手感，不追新题）");
       } else {
-        out.push("四级听力精听 60 min：" + (pool[dow-1] || pool[0] || "四级真题听力") +
-          "（整套 Section A/B/C：先做题 → 逐句听写 → 对原文标原因）");
+        out.push("四级听力 60 min：四级听力真题（近 2 套里没精听过的，考前只做熟题）" +
+          "（整套限时 25 min 不停 → 对答案 5 min → 精听错段 20 min → 跟读 10 min；错因四分类：连读/生词/语速/走神）");
         out.push("单词 40 min：四级核心词 100 个" + wordProg2("cet4", wi) + " + 昨日错词（只记发音和拼写，不抄词根）");
         out.push("四级阅读真题 50 min：1 套限时 40 min + 精读错的那 2 篇 10 min");
       }
@@ -3246,29 +3253,59 @@ function buildItems(b, w, dow, wi, d){
       out.push(stage === "cet6" ? "单词 30 min：六级核心词" + wordProg2("cet6", wi)
              : stage === "post" ? "单词 30 min：考研红宝书" + wordProg2("post", wi)
              : "单词 30 min：四级核心词" + wordProg2("cet4", wi));
+      /* ⭐ 2026-10-18 用户指出「一套听力要 25 min」—— 工作日 30 min 只够做**单篇**，
+         整套限时必须放周末（周六 30 min 四级 / 40 min 六级），周日只复盘错段。 */
+      const satList = (stage === "cet4");
+      const sat6 = (stage === "cet6" && en6RealListening(w));
+      const isSat = (dow === 6);
+      const bigListen = isSat && (satList || sat6);   /* 周六才有整套限时，长难句让 10 min */
+      if (dow === 6 && satList)
+        out.push("⭐ 整套限时 30 min：四级听力 1 套（25 min 不停不回头）+ 对答案 5 min（本周概览第 4 套；不做精听，精听留周日）");
+      if (dow === 6 && sat6)
+        out.push("⭐ 整套限时 40 min：六级听力 1 套（30 min，讲座题先记 5 个关键词）+ 对答案 10 min");
+      if (dow === 0 && satList)
+        out.push("听力错段精听 15 min：周六那套里错的 2 段，各 7 min（只复听、不追新题）");
+      if (dow === 0 && sat6)
+        out.push("听力错段精听 15 min：周六那套里错得最多的 2 段（讲座题优先）");
       if (w && w.enSent)
-        out.push("⭐ 长难句 50 min：刘晓艳《不就是语法和长难句吗？》" + w.enSent
-               + "（看课 → 抄句 → 划成分 → 翻译 → 对答案，一次做 3–4 句）");
+        out.push("⭐ 长难句 " + (bigListen ? "40" : "50") + " min：刘晓艳《不就是语法和长难句吗？》" + w.enSent
+               + "（看课 → 抄句 → 划成分 → 翻译 → 对答案，一次做 3–4 句）"
+               + (bigListen ? "；周六少 10 min，让给整套听力" : ""));
       else
         out.push(stage === "cet6"
           ? "（长难句 65 讲已走完：本周英语只保单词 + 六级专项）"
           : (stage === "cet4"
              ? "（四级冲刺期：长难句暂停，本周英语只保单词）"
              : "（长难句已并入阅读精读：本周英语只保单词 + 阅读）"));
-      if (stage === "cet6") out.push("六级专项 20 min：六级真题（听力 1 篇 / 阅读 1 篇 轮换，严格计时）");
+      if (stage === "cet6")
+        out.push("六级专项 20 min：" + (isSat
+          ? "六级翻译 / 写作 1 篇（听力已在整套里做过，专项不重复听）"
+          : "六级真题（听力 1 篇 / 阅读 1 篇 轮换，严格计时）"));
       return out;
     }
     if (stage === "cet6"){
       /* enMaterial 四条的含义随阶段变：
-         四级阶段 [听力1,听力2,听力3,听力4]
-         六级阶段 [六级听力, 英一阅读Text1, 英一阅读Text2, 六级翻译/写作]
-         → 听力取 en[0]，阅读取 en[1..2]，专项取 en[3]。 */
+         六级阶段 [六级听力?, 英一阅读Text1, 英一阅读Text2, 六级翻译/写作]
+         → 听力取 en[0]（**只有它真是听力材料时**），阅读取 en[1..2]，专项取 en[3]。
+         ⚠️ 2026-10-18 修：W14–W22 的 en[0] 还不是六级听力真题（那几周是「真题阅读起步」），
+         原来一律当听力 → 出现「六级听力 30 min：真题阅读起步：每天 1 篇精读」这种标签错位，
+         9 周共 63 条、约 31.5 h 名不副实。现在：材料不像听力就不排听力条目，
+         那 30 min 直接并进英一阅读（听力只集中在 W1–W8 四级 + W23 起真六级真题）。*/
       const enMat = (w && w.enMaterial) || [];
-      const listenMat = enMat[0] || (w && w.en && w.en[0]) || "六级真题听力";
+      const listenMat = enMat[0] || "";
+      const realListen = /听力/.test(listenMat);
       const readMat = enMat[1 + Math.min(Math.max(dow - 1, 0), 1)] || "英一真题精读";
-      out.push("六级听力 30 min：" + listenMat + "（听写 → 对原文找原因）");
       out.push("单词 30 min：六级核心词" + wordProg2("cet6", wi));
-      out.push("阅读 20 min：" + readMat);
+      if (realListen){
+        /* 工作日只做**单篇**（一套 30 min 装不进 30 min 的块里）：
+           section 按星期轮换，避免天天只听同一种题型 */
+        const secMap = {1:"Section A 长对话 1 段", 2:"Section B 听力篇章 1 段",
+                        3:"Section C 讲座 1 篇", 4:"Section A 长对话 1 段", 5:"Section C 讲座 1 篇"};
+        out.push("六级听力单篇 30 min：做题 4 → 精听 20 → 跟读 6 ｜今天听 " + listenMat + " 的 " + (secMap[dow] || "Section C 讲座 1 篇"));
+        out.push("阅读 20 min：" + readMat);
+      } else {
+        out.push("阅读精读 50 min：" + readMat + "（先做题 → 逐句拆 → 生词进本；听力从 W23 才起，这里全给阅读）");
+      }
       out.push("六级专项 20 min：" + (enMat[3] || "翻译 / 写作 轮换（六级独有题型）"));
     } else if (stage === "post"){
       /* W9–W13：四级已考完。enMaterial = [总述, 阅读Text1, 阅读Text2, 复盘]
@@ -3279,8 +3316,13 @@ function buildItems(b, w, dow, wi, d){
       out.push("阅读精读 50 min：" + readMat + "（先做题 → 逐句拆 → 生词进本）");
       out.push("长难句 20 min：从今天这篇里挑 2 句，划成分 + 翻译");
     } else {
-      if (dow >= 1 && dow <= 4 && pool[dow-1]) out.push("听力精听 30 min：" + pool[dow-1] + "（逐句听写）");
-      else out.push("听力精听 30 min：" + (pool[0] || "—") + "（逐句听写 / 复盘）");
+      /* ⭐ 2026-10-18 用户指出：一套听力 25 min，30 min 的块装不下「做题 + 精听 + 跟读」。
+         所以工作日只做**单篇**（1 段音频 2–3 min），整套留到周六限时。
+         分钟必须对得上：4 + 20 + 6 = 30。 */
+      const secMap = {1:"Section A 短篇新闻 1 段", 2:"Section B 长对话 1 段",
+                      3:"Section C 听力篇章 1 段", 4:"Section A 短篇新闻 1 段", 5:"Section B 长对话 1 段"};
+      const mat4 = pool[dow-1] || pool[0] || "四级真题听力";
+      out.push("四级听力单篇 30 min：做题 4 → 精听 20 → 跟读 6 ｜今天听 " + mat4 + " 的 " + (secMap[dow] || "Section A 短篇新闻 1 段"));
       out.push("单词 30 min：四级核心词" + wordProg2("cet4", wi));
       out.push("阅读真题 20 min（四级阅读）");
     }
