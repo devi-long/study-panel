@@ -3201,6 +3201,23 @@ function en6RealListening(w){
   return /听力/.test(m);
 }
 
+/* ⭐ 2026-10-19：期末缓冲期模板里的块名写死成「数学（概率期末复习）」，
+   但缓冲期 C 计划是「一/三/五/日 概率 · 二/四/六 高数」——
+   于是周二/周四/周六会出现「块名说概率、内容是高数」的自相矛盾（36 周里 24 次）。
+   和 408 的 dsLabelFor 同样的做法：块名按当天条目判定。 */
+function mathLabelFor(items, base){
+  if (!/期末复习/.test(base)) return base;        /* 只有缓冲期模板的块名需要改 */
+  const t = (items || []).join(" ");
+  const hasP = /概率|随机变量|数理统计|分布列|期望|方差|大数定律/.test(t);
+  const hasG = /高数|极限|微分|中值|积分|级数|多元|重积分|曲面/.test(t);
+  const hasX = /线代|向量组|特征值|相似|二次型|矩阵|行列式/.test(t);
+  if (hasP && !hasG && !hasX) return "数学（概率期末复习）";
+  if (hasG && !hasP && !hasX) return "数学（高数·期末复习）";
+  if (hasX && !hasP && !hasG) return "数学（线代·期末复习）";
+  if (hasG || hasX) return "数学（高数/线代·期末复习）";
+  return "数学（期末复习）";
+}
+
 function buildItems(b, w, dow, wi, d){
   if (b.fixed) return b.fixed.slice();
   const out = [];
@@ -3321,7 +3338,11 @@ function buildItems(b, w, dow, wi, d){
          分钟必须对得上：4 + 20 + 6 = 30。 */
       const secMap = {1:"Section A 短篇新闻 1 段", 2:"Section B 长对话 1 段",
                       3:"Section C 听力篇章 1 段", 4:"Section A 短篇新闻 1 段", 5:"Section B 长对话 1 段"};
-      const mat4 = pool[dow-1] || pool[0] || "四级真题听力";
+      /* ⚠️ W5–W8 的 w.en 存的是冲刺任务名（"⚠️ 四级冲刺：写作模板开始背"），
+         直接当听力材料会渲染出「今天听 ⚠️ 四级冲刺：写作模板开始背 的 Section A」。
+         只接受「YYYY.M 第 N 套」这种真套号，否则回退成通用材料名。 */
+      const raw4 = pool[dow-1] || pool[0] || "";
+      const mat4 = /^20\d\d\.\d+ 第 \d+ 套$/.test(raw4) ? raw4 : "四级听力真题（本周还没精听的那一套）";
       out.push("四级听力单篇 30 min：做题 4 → 精听 20 → 跟读 6 ｜今天听 " + mat4 + " 的 " + (secMap[dow] || "Section A 短篇新闻 1 段"));
       out.push("单词 30 min：四级核心词" + wordProg2("cet4", wi));
       out.push("阅读真题 20 min（四级阅读）");
@@ -3358,7 +3379,8 @@ function dayBlocks(dow, w, adapting, fin, wi, d){
     const items = adapting ? b.items : buildItems(b, w, dow, wi, d);
     if (!adapting && !b.fixed && items.length === 0) return;   // 今天这块没任务 → 不显示
     /* ⭐ 408 块名跟着本周内容走（数据结构 / 组成原理 / 操作系统 / 计算机网络 / 408） */
-    const nm = (b.src === "ds") ? dsLabelFor(items, w, fin) : b.nm;
+    const nm = (b.src === "ds") ? dsLabelFor(items, w, fin)
+             : (b.src === "math") ? mathLabelFor(items, b.nm) : b.nm;
     out.push({ bi: out.length, nm: nm, color: b.color, min: b.min, src: b.src, items: items });
   });
   /* ⭐ 2026-10-17 用户要求：面板只有「日清单」没有收口。
@@ -3476,6 +3498,15 @@ function weekdayTemplate(dow, fin, d){
      期末缓冲期（fin）不加时：那时数学已是 60 min 概率复习（finalMathItems），数据结构走期末复习。 */
   if (!fin){
     let blocks = base;
+    /* ⭐ 2026-10-19 跨线体检：W36 周六（06-26）排的是「408 整卷 180 min（严格计时）」，
+       但那天的 408 块只有 90 min —— 和英语「一套 25 min 塞进 30 min 块」是同一类错。
+       修法：这一天 408 给 180 min，算法线 150 → 60 min（当天算法只有「代码仓库整理」收尾，
+       60 min 够用）。**当天总时长与 W36 周总量都不变**：90+150 = 180+60。 */
+    if (fmt(day) === "2027-06-26"){
+      blocks = blocks.map(b => (b.src === "ds" || /408/.test(b.nm))
+        ? Object.assign({}, b, {min: 180})
+        : (b.src === "algo" ? Object.assign({}, b, {min: 60}) : b));
+    }
     if (day <= CLASS_KNOWN_TO){
       /* 课表已知（≤ 2027-01-24）：把「坐在教室里本来就能学」的时间算进来 */
       if (dowD === 2) blocks = blocks.map(b => (b.src === "math") ? Object.assign({}, b, {min:180}) : b);
