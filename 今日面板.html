@@ -1063,8 +1063,8 @@ const WEEKS = [
    {d:"T", t:"画 train-val 曲线（loss 与 acc 两张）"},
    {d:"W", t:"调学习率（3 个值），记录准确率差别"},
    {d:"R", t:"改层数 / 隐藏单元数，记录准确率"},
-   {d:"F", t:"整理实验表格（超参 → 准确率），存进项目②"},
-   {d:"S", t:"把实验表格 + 结论写进项目② README 草稿"},
+   {d:"F", t:"整理实验表格（超参 → 准确率），存进 experiments/w17.csv（W30 项目② 直接复用）"},
+   {d:"S", t:"把实验表格 + 结论写成一段「调参结论」笔记（W30 项目② 直接抄）"},
   ],
   en:["真题阅读 + 高频词", "英一：2009 年阅读 Text 1 精读", "英一：2009 年阅读 Text 2 精读", "英一：阅读复盘 + 生词本"],
   enMaterial:["真题阅读 + 高频词", "英一：2009 年阅读 Text 1 精读", "英一：2009 年阅读 Text 2 精读", "英一：阅读复盘 + 生词本"],
@@ -1762,7 +1762,7 @@ const WEEKS = [
    {d:"W", t:"作品集：每个项目补一份「问题→方案→数字」说明"},
    {d:"R", t:"写「AI 学习 36 周总结」：会了什么 / 还欠什么 / 下一步"},
    {d:"F", t:"定下暑假 AI 计划（跟课 + 项目③选题）"},
-   {d:"S", t:"休息 / 机动（补没做完的）"},
+   {d:"S", t:"机动：三个项目各重跑一遍，确认文档里的命令都能复现（补齐就跑）"},
   ],
   en:["六级已考完 → 转考研强化：英一真题阅读继续", "英一：2018 年阅读 Text 2 精读", "英一：2018 年阅读 Text 3 精读", "暑假英语计划：英一真题 + 单词 + 作文"],
   enMaterial:["六级已考完 → 转考研强化：英一真题阅读继续", "英一：2018 年阅读 Text 2 精读", "英一：2018 年阅读 Text 3 精读", "暑假英语计划：英一真题 + 单词 + 作文"],
@@ -3403,6 +3403,11 @@ function buildItems(b, w, dow, wi, d){
        用户要求：英语提到 150 min/天（听力最弱、四级 399），但**不许挤压周二概率、周四周五数据结构**
        —— 所以这两块仍是 60 min（见 TPL.cet4Work），只把英语时间加上去。
        12-12 是考试日（上午 130 min 考试），12-13 是考后复盘日。 */
+    if (d && fmt(d) === fmt(CET6_EXAM)){
+      out.push("⭐ 六级考试（09:00–11:25，130 min）：听力先扫选项，作文留足 30 min，翻译别空");
+      out.push("考完当天不复盘、不查答案：只记一句感受，晚上早睡");
+      return out;
+    }
     if (isCet4Sprint(d)){
       const m = fmt(d);
       if (m === "2026-12-12"){
@@ -3450,7 +3455,9 @@ function buildItems(b, w, dow, wi, d){
                        : stage === "post" ? ("单词 " + m + " min：考研红宝书" + wordProg2("post", wi))
                        : ("单词 " + m + " min：四级核心词" + wordProg2("cet4", wi));
       const enMatF = (w && w.enMaterial) || [];
-      const readMatF = enMatF[1] || "英一真题精读";
+      /* 期末缓冲周：原来固定取 enMatF[1]，5 个工作日全在精读同一篇；
+         改成隔天轮换（一/三/五 用 [1]，二/四 用 [2]）。 */
+      const readMatF = enMatF[1 + ((dow - 1) % 2)] || enMatF[1] || "英一真题精读";
       if (!wknd){
         if (stage === "cet4"){
           const raw = pool[dow-1] || pool[0] || "";
@@ -3659,6 +3666,17 @@ function mathNeedOf(items){
 }
 
 /* 当天 408 单元一共多少分钟（按 WD_MAP 的日期 → 单元下标查表） */
+/* 考试日：当天不排会冲突的线
+   省赛 2027-04-10：竞赛当天砍 数学 / AI（数学是 161 min 的硬仗，AI 也不该挤占）
+   六级 2027-06-19：英语当天就是考试，砍 数学 / 算法（算法 170 min 是最大的一块） */
+function examDrop(d, src){
+  if (!d) return false;
+  const m = fmt(d);
+  if (m === "2027-04-10") return src === "math" || src === "ai";
+  if (m === "2027-06-19") return src === "math" || src === "algo";
+  return false;
+}
+
 function wdNeedOf(d){
   if (typeof WD_MAP === "undefined" || !d) return 0;
   const ids = WD_MAP[fmt(d)];
@@ -3682,6 +3700,8 @@ function dayBlocks(dow, w, adapting, fin, wi, d){
     /* ⭐ 方案 B：数学块按条目里的真实时长给（只加不减，其它块不受影响） */
     const need = (!adapting && b.src === "math") ? mathNeedOf(items) : 0;
     /* 408：块时长 = 当天单元的真实块分钟（视频/1.5 + 课后题），装进模板额度里 */
+    /* 考试日：冲突的线当天直接不排（块消失），腾出来的时间就是休息 */
+    if (!adapting && examDrop(d, b.src)) return out;
     /* 408：有新课 = 单元真实时长；没有新课 = 40 min 真题/复习（腾出的时间给 AI/算法） */
     let dsNeed = (!adapting && b.src === "ds") ? wdNeedOf(d) : 0;
     /* 只有走了「真题/复习」兜底的日子才压到 40 min；
