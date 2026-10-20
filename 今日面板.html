@@ -1803,7 +1803,7 @@ const WEEKS = [
 /* ---------- 适应周剩余 4 天：一天一条，只显示当天 ---------- */
 const ADAPT = [
   {date:"2026-10-12", wd:"周一 · 摸底准备", min:240, color:"#8b949e", items:[
-    "英语 60：单词 100 个（四级核心词）+ 听力 2023.6 第 1 套先做一遍（不对答案）",
+    "英语 60：单词 100 个（刘晓艳四级词汇）+ 听力 2023.6 第 1 套先做一遍（不对答案）",
     "数据结构 60：王道 2.1 顺序表 —— 只读概念 + 手写插入/删除",
     "算法 60：把比赛环境备好（IDE / 编译命令 / 模板文件），确认报名状态",
     "AI 60：Python 手感恢复 2 道（打印九九乘法表 / 求 1~100 的和）",
@@ -1817,12 +1817,12 @@ const ADAPT = [
   {date:"2026-10-14", wd:"周三 · 今天（热身）", min:180, color:"#58a6ff", items:[
     "AI 20：跑一次环境自检 —— code\\week0\\check_api.py，确认 API 能通",
     "算法 60：热身 2 道简单题（数组求和 / 找最大值），把编辑器手感找回来",
-    "英语 40：单词 100 个（四级核心词）+ 把听力材料找齐（2023.6 第 1 套）",
+    "英语 40：单词 100 个（刘晓艳四级词汇）+ 把听力材料找齐（2023.6 第 1 套）",
     "⭐ 概率 30（张宇 第1讲 · 1/2）：把随机事件与概率做成公式卡片 —— 公式 + 适用条件 + 一个例子",
     "⭐ 打开面板点几个勾：确认进度条会动（不该动就是 bug，发我）",
   ]},
   {date:"2026-10-15", wd:"周四", min:300, color:"#58a6ff", items:[
-    "英语 60：单词 100 个（四级核心词） + 听力精听 2023.6 第 1 套（逐句听写） + 长难句 第 1 句",
+    "英语 60：单词 100 个（刘晓艳四级词汇） + 听力精听 2023.6 第 1 套（逐句听写） + 长难句 第 1 句",
     "数据结构 60：王道 2.1 顺序表 + 2.2 单链表（配合学校课进度）",
     "⭐ 算法 90：摸底第 1 套（严格计时，用考试环境，不查题解）",
     "AI 60：手感恢复 3 道小题（判断闰年 / 求阶乘 / 九九乘法表）",
@@ -3485,10 +3485,32 @@ function buildItems(b, w, dow, wi, d){
   const out = [];
   /* ⭐ 2026-10-17：单词进度必须定义在任何分支之前 —— 原来定义在 const stage 之后，
      四级冲刺分支（更早）用到就会 TDZ: Cannot access 'wordProg' before initialization。 */
+  /* ⭐ 2026-10-19：原来的「第 N/M 组」是按周数硬编的（四级 8 周=8 组、六级 23 周=23 组），
+     跟书上真实单元没关系。现在：
+       · 四级《你还在背单词吗》= 10 单元（知乎「一到十单元」），窗口 10-19 ~ 12-11
+       · 六级《你还在背单词吗》= 10 单元（本地课程 Unit1–Unit10，44 小节 / 30.2 h 视频），窗口 01-18 ~ 06-11
+       · 考研红宝书：等 PDF 到手再定，暂时沿用旧写法 */
+  /* 六级《你还在背单词吗》10 个 Unit 的真实视频时长（本地 mp4 解析，分钟） */
+  const CET6_UNIT_MIN = [170, 177, 161, 196, 172, 186, 182, 188, 174, 204];
+  const wordBookName = (st) => st === "cet6" ? "六级《你还在背单词吗》"
+                        : st === "post" ? "考研红宝书"
+                        : "四级《你还在背单词吗》";
+  const wordUnit = (st, day) => {
+    if (!day) return "";
+    const win = st === "cet6" ? ["2027-01-18", "2027-06-11"]
+              : st === "cet4" ? ["2026-10-19", "2026-12-11"] : null;
+    if (!win) return "";
+    const a = parseDay(win[0]), b = parseDay(win[1]);
+    const span = Math.round((b - a) / DAY) + 1;
+    const total = 10;
+    const k = Math.max(1, Math.min(total, Math.floor(((day - a) / DAY) / (span / total)) + 1));
+    const extra = (st === "cet6") ? "，本单元视频 " + CET6_UNIT_MIN[k - 1] + " min" : "";
+    return "（第 " + k + "/" + total + " 单元" + extra + "）";
+  };
+  const wordTag = (st, day) => wordBookName(st) + (st === "post" ? "" : wordUnit(st, day));
   const wordProg2 = (st, idx) => {
-    if (st === "cet6") return "（5500 词表 · 第 " + (idx - 12) + "/23 组）";
-    if (st === "post") return "（一轮 · 第 " + (idx - 7) + "/5 组）";
-    return "（第 " + (idx + 1) + "/8 组）";
+    if (st === "post") return "（一轮 · 第 " + Math.max(1, Math.min(5, idx - 7)) + "/5 组）";
+    return wordUnit(st, d);
   };
   if (b.src === "en"){
     const pool = (w && w.en) ? w.en : [];
@@ -3509,18 +3531,18 @@ function buildItems(b, w, dow, wi, d){
         out.push("考后复盘 20 min：只记感受（哪几题没跟上、哪段听得最慌），当天不查答案");
       } else if (m === "2026-12-13"){
         out.push("四级复盘 40 min：听力错题对原文，写清原因（走神 / 词不认识 / 连读没听出）");
-        out.push("单词 30 min：四级核心词（最后一天，下周起换考研红宝书）");
+        out.push("单词 30 min：" + wordBookName("cet4") + "（最后一天，下周起换考研红宝书）");
         out.push("阅读 30 min：四级阅读真题 1 篇（保持手感，不追新题）");
       } else {
         out.push("四级听力 60 min：四级听力真题（近 2 套里没精听过的，考前只做熟题）" +
           "（整套限时 25 min 不停 → 对答案 5 min → 精听错段 20 min → 跟读 10 min；错因四分类：连读/生词/语速/走神）");
-        out.push("单词 40 min：四级核心词 100 个" + wordProg2("cet4", wi) + " + 昨日错词（只记发音和拼写，不抄词根）");
+        out.push("单词 40 min：" + wordBookName("cet4") + wordUnit("cet4", d) + " 100 个 + 昨日错词（只记发音和拼写，不抄词根）");
         out.push("四级阅读真题 50 min：1 套限时 40 min + 精读错的那 2 篇 10 min");
       }
       return out;
     }
     /* 英语 100 min。三个阶段（阶段由 **周次** 决定，见 STAGE）：
-       STAGE 'cet4'   W1–W8 ：四级阶段 —— 四级听力 + **四级核心词** + 四级阅读
+       STAGE 'cet4'   W1–W8 ：四级阶段 —— 四级听力 + **四级《你还在背单词吗》** + 四级阅读
        STAGE 'post'   W9–W13：四级已考完（2026-12-12）、期末缓冲 ——
                              不再练四级听力；**背考研红宝书（一轮）** + 英一阅读精读
        STAGE 'cet6'   W14+  ：六级阶段 —— 六级听力 + 六级词 + 英一阅读 + 六级专项
@@ -3528,7 +3550,7 @@ function buildItems(b, w, dow, wi, d){
        ⚠️ 历史 bug（2026-10-16 修）：原来只分「四级 / 六级」两段，分界是 wi>=13（W14）。
          于是 W9–W13 落在四级分支里，把 enMaterial 里的**英一阅读**当**听力材料**渲染，
          变成「听力精听 30 min：英一：2005 年阅读 Text 3 精读（逐句听写）」，
-         而且四级考完还继续显示「单词 30 min：四级核心词 / 阅读真题（四级阅读）」。
+         而且四级考完还继续显示「单词 30 min：四级《你还在背单词吗》/ 阅读真题（四级阅读）」。
        周末只留单词 + 长难句（+六级专项）—— 周末科目多，再堆听力和阅读会压垮。
        长难句只有周末排，且必须有 enSent（W5–W8 四级冲刺期为空 = 暂停）。 */
     const stage = (wi >= 13) ? "cet6" : ((wi >= 8) ? "post" : "cet4");
@@ -3545,9 +3567,7 @@ function buildItems(b, w, dow, wi, d){
     const inFinEn = (FIN_DAY >= FINAL_FROM && FIN_DAY <= FINAL_TO);
     if (inFinEn){
       const wknd = (dow === 0 || dow === 6);
-      const wordLine = (m) => stage === "cet6" ? ("单词 " + m + " min：六级核心词" + wordProg2("cet6", wi))
-                       : stage === "post" ? ("单词 " + m + " min：考研红宝书" + wordProg2("post", wi))
-                       : ("单词 " + m + " min：四级核心词" + wordProg2("cet4", wi));
+      const wordLine = (m) => "单词 " + m + " min：" + wordTag(stage, FIN_DAY);
       const enMatF = (w && w.enMaterial) || [];
       /* 期末缓冲周：原来固定取 enMatF[1]，5 个工作日全在精读同一篇；
          改成隔天轮换（一/三/五 用 [1]，二/四 用 [2]）。 */
@@ -3594,9 +3614,7 @@ function buildItems(b, w, dow, wi, d){
     }
 
     if (isWeekend){
-      out.push(stage === "cet6" ? "单词 30 min：六级核心词" + wordProg2("cet6", wi)
-             : stage === "post" ? "单词 30 min：考研红宝书" + wordProg2("post", wi)
-             : "单词 30 min：四级核心词" + wordProg2("cet4", wi));
+      out.push("单词 30 min：" + wordTag(stage, d));
       /* ⭐ 2026-10-18 用户指出「一套听力要 25 min」—— 工作日 30 min 只够做**单篇**，
          整套限时必须放周末（周六 30 min 四级 / 40 min 六级），周日只复盘错段。 */
       const satList = (stage === "cet4");
@@ -3639,7 +3657,7 @@ function buildItems(b, w, dow, wi, d){
       const listenMat = enMat[0] || "";
       const realListen = /听力/.test(listenMat);
       const readMat = enMat[1 + Math.min(Math.max(dow - 1, 0), 1)] || "英一真题精读";
-      out.push("单词 30 min：六级核心词" + wordProg2("cet6", wi));
+      out.push("单词 30 min：" + wordTag("cet6", d));
       if (realListen){
         /* 工作日只做**单篇**（一套 30 min 装不进 30 min 的块里）：
            section 按星期轮换，避免天天只听同一种题型 */
@@ -3671,7 +3689,7 @@ function buildItems(b, w, dow, wi, d){
       const raw4 = pool[dow-1] || pool[0] || "";
       const mat4 = /^20\d\d\.\d+ 第 \d+ 套$/.test(raw4) ? raw4 : "四级听力真题（本周还没精听的那一套）";
       out.push("四级听力单篇 30 min：做题 4 → 精听 20 → 跟读 6 ｜今天听 " + mat4 + " 的 " + (secMap[dow] || "Section A 短篇新闻 1 段"));
-      out.push("单词 30 min：四级核心词" + wordProg2("cet4", wi));
+      out.push("单词 30 min：" + wordTag("cet4", d));
       out.push("阅读真题 20 min（四级阅读）");
     }
   } else if (b.src === "ds"){
@@ -4105,7 +4123,7 @@ const PKG_WINDOWS = [
      {k:"p2", q:2, t:"张宇《基础30讲》三册（高数 / 线代 / 概率 · 数一版）", due:"10-21 前到"},
      {k:"p3", q:3, t:"张宇《1000 题》基础篇（数一）—— 第一轮唯一的做题载体", due:"10-21 前到"},
      {k:"p4", q:4, t:"王道《数据结构》", due:"10-21 前到"},
-     {k:"p5", q:5, t:"装个背单词 APP（四级核心词免费词库）—— W1–W8 用这个，红宝书 W9 才起", due:"10-21 前"},
+     {k:"p5", q:5, t:"装个背单词 APP 或直接用刘晓艳《你还在背单词吗》四级版—— W1–W8 用这个，红宝书 W9 才起", due:"10-21 前"},
      {k:"p6", q:6, t:"A4 草稿纸 2 包 + A5 活页本（当「薄弱清单」用）", due:"10-20 前到"},
      {k:"p7", q:7, t:"四级真题 16 套（W1–W8 冲刺，12-12 考试）", due:"10-25 前到"},
      {k:"p8", q:8, t:"王道《计算机组成原理》（W10 才用，但寒假要加速 → 现在屯）", due:"10-25 前到"},
