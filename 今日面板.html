@@ -3689,21 +3689,19 @@ function buildItems(b, w, dow, wi, d){
       if (dow === 0 && sat6)
         out.push("听力错段精听 15 min：周六那套里错得最多的 2 段（讲座题优先）");
       const lsK = lsNo(d);
-      if (lsK >= 1){   /* 讲数未知：周末一律排 1 讲，课程走完为止 */
-        if (lsK <= LS_DUR.length){
-          const lv = LS_DUR[lsK - 1];
-          out.push("⭐ 长难句 " + (bigListen ? "40" : "50") + " min：刘晓艳语法长难句 第 " + lsK + "/" + LS_DUR.length + " 讲"
-                 + "「" + LS_TITLE[lsK - 1] + "」（本讲 " + lv + " min，1.5× ≈ " + Math.round(lv / 1.5)
-                 + " min）→ 抄句 → 划成分 → 翻译 → 对答案");
-        } else {
-          out.push("⭐ 长难句复盘 50 min：39 讲已看完 → 把错得最多的 10 句重做（划成分 + 翻译）");
-        }
+      if (lsK >= 1 && lsK <= LS_DUR.length){
+        const lv = LS_DUR[lsK - 1];
+        out.push("⭐ 长难句 " + (bigListen ? "40" : "50") + " min：刘晓艳语法长难句 第 " + lsK + "/" + LS_DUR.length + " 讲"
+               + "「" + LS_TITLE[lsK - 1] + "」（本讲 " + lv + " min，1.5× ≈ " + Math.round(lv / 1.5)
+               + " min）→ 抄句 → 划成分 → 翻译 → 对答案");
       } else {
         /* ⭐ 2026-10-19：长难句讲完后，周末英语块会空出 40–50 min（块 102、条目只有 50–60）。
            按剩余时间补真实任务，不再留占位句。 */
         let used = 0;
         out.forEach(x => { const mm = String(x).match(/([0-9]+) min/); if (mm) used += Number(mm[1]); });
-        const gap = Math.max(0, (b.min || 100) - used);
+        /* 六级阶段后面还会 push 一条 20 min 专项，这里先预留，否则会超块 */
+        const reserve = (stage === "cet6") ? 20 : 0;
+        const gap = Math.max(0, (b.min || 100) - used - reserve);
         if (gap >= 25){
           const readMin = Math.min(45, gap);
           const nm2 = stage === "cet6" ? "六级阅读" : stage === "cet4" ? "四级阅读" : "英一阅读";
