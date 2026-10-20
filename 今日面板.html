@@ -265,7 +265,7 @@
     <button onclick="clearToday()">清空当天勾选</button>
     <button onclick="window.print()">打印今天</button>
     <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importProgress(this)">
-    <button onclick="alert('核心规则：\n\n1. 一屏 = 一天。只显示你选的那一天，不再把一周摊开。\n2. 早于今天的日子不再显示（适应周已过完就翻不回去了）。\n3. 正式周按天拆分：周一~周五各不同 —— 算法 5 道题摊到 5 天、数据结构章节按天推进、AI 每天 1 个动作，周末是收口。\n4. 勾选按日期分别保存（localStorage），切日期不会丢；每次勾选都自动保存。\n5. 想手动确认就点「💾 保存进度」；想换浏览器/清记录前先点「⬇️ 导出备份」。\n6. 每天 0 点后刷新就是新的一天。')">怎么用？</button>
+    <button onclick="alert('核心规则：\n\n1. 一屏 = 一天。只显示你选的那一天，不再把一周摊开。\n2. 可以回看过去的日子（往前翻到适应周起点），过去的日子标注「已过 · 可补勾」。\n3. 正式周按天拆分：周一~周五各不同 —— 算法 5 道题摊到 5 天、数据结构章节按天推进、AI 每天 1 个动作，周末是收口。\n4. 勾选按日期分别保存（localStorage），切日期不会丢；每次勾选都自动保存。\n5. 想手动确认就点「💾 保存进度」；想换浏览器/清记录前先点「⬇️ 导出备份」。\n6. 每天 0 点后刷新就是新的一天。')">怎么用？</button>
   </div>
     <div class="syncbox" id="syncPanel" style="display:none">
     <div class="synchead">☁️ 云同步 <span id="syncState">未连接</span></div>
@@ -4338,10 +4338,10 @@ function render(){
   renderPkg();   /* 📦 材料采购提醒：4 个时间窗，只在对应那周出现，买齐自动收起 */
 
   document.getElementById("dateTitle").textContent =
-    fmt(cur) + " · " + WD[dow] + (isToday ? "（今天）" : "");
+    fmt(cur) + " · " + WD[dow] + (isToday ? "（今天）" : (cur < today0 ? "（已过 · 可补勾）" : ""));
 
-  /* ---- 导航：早于今天一律禁用 ---- */
-  const canPrev = cur > today0;
+  /* ---- 导航：可以回看过去（一直翻到适应周起点），只有未来不能往回翻 ---- */
+  const canPrev = cur > ADAPT_FROM;
   document.getElementById("btnPrev").disabled = !canPrev;
   document.getElementById("btnNext").disabled = cur < ADAPT_FROM;
 
@@ -4426,9 +4426,9 @@ function render(){
   if (cur < ADAPT_FROM){
     adaptBox.style.display = "none";
     emptyBox.style.display = "block";
-    emptyBox.innerHTML = "⚠️ " + fmt(cur) + " 早于「今天」，已不再显示。<br>" +
-      "本面板一屏只显示<b>一天</b>，且只显示今天及以后；适应周从 <b>2026-10-12</b> 开始。<br>" +
-      "今天是 <b>" + fmt(today0) + "</b>（" + WD[today0.getDay()] + "），你的内容在 <b>" + fmt(ADAPT_FROM) + "</b> 开始。";
+    emptyBox.innerHTML = "⚠️ " + fmt(cur) + " 早于适应周起点，没有内容。<br>" +
+      "本面板一屏只显示<b>一天</b>；适应周从 <b>2026-10-12</b> 开始。<br>" +
+      "今天是 <b>" + fmt(today0) + "</b>（" + WD[today0.getDay()] + "）。";
     document.getElementById("barfill").style.width = "0%";
     document.getElementById("pct").textContent = "—";
     const b = document.getElementById("previewBtn");
