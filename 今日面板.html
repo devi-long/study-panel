@@ -3494,18 +3494,35 @@ function buildItems(b, w, dow, wi, d){
   const CET6_UNIT_MIN = [170, 177, 161, 196, 172, 186, 182, 188, 174, 204];
   const wordBookName = (st) => st === "cet6" ? "六级《你还在背单词吗》"
                         : st === "post" ? "考研红宝书"
-                        : "四级《你还在背单词吗》";
+                        : "四级单词";
   const wordUnit = (st, day) => {
     if (!day) return "";
-    const win = st === "cet6" ? ["2027-01-18", "2027-06-11"]
-              : st === "cet4" ? ["2026-10-19", "2026-12-11"] : null;
-    if (!win) return "";
-    const a = parseDay(win[0]), b = parseDay(win[1]);
+    /* ⭐ 2026-10-19 用户定：四级不按刘晓艳的单元，改成按**两轮日期**推进：
+         第一轮 10-19 ~ 11-09（22 天）；第二轮 11-10 ~ 12-04（25 天）；
+         12-05 起只滚错词（12-12 考试，最后一周不碰新词）。
+       六级仍按《你还在背单词吗》10 Unit，06-19 考试、06-11 背完。 */
+    if (st === "cet4"){
+      const r1a = parseDay("2026-10-19"), r1b = parseDay("2026-11-09");
+      const r2a = parseDay("2026-11-10"), r2b = parseDay("2026-12-04");
+      if (day <= r1b){
+        const n = Math.round((day - r1a) / DAY) + 1;
+        const t = Math.round((r1b - r1a) / DAY) + 1;
+        return "（第一轮 第 " + n + "/" + t + " 天）";
+      }
+      if (day <= r2b){
+        const n = Math.round((day - r2a) / DAY) + 1;
+        const t = Math.round((r2b - r2a) / DAY) + 1;
+        return "（第二轮 第 " + n + "/" + t + " 天）";
+      }
+      return "（两轮已过完 · 只滚错词）";
+    }
+    if (st !== "cet6") return "";
+    const a = parseDay("2027-01-18"), b = parseDay("2027-06-11");
+    if (day > b) return "（10 单元已背完 · 滚动复习 + 错词本）";
     const span = Math.round((b - a) / DAY) + 1;
     const total = 10;
     const k = Math.max(1, Math.min(total, Math.floor(((day - a) / DAY) / (span / total)) + 1));
-    const extra = (st === "cet6") ? "，本单元视频 " + CET6_UNIT_MIN[k - 1] + " min" : "";
-    return "（第 " + k + "/" + total + " 单元" + extra + "）";
+    return "（第 " + k + "/" + total + " 单元，本单元视频 " + CET6_UNIT_MIN[k - 1] + " min）";
   };
   const wordTag = (st, day) => wordBookName(st) + (st === "post" ? "" : wordUnit(st, day));
   const wordProg2 = (st, idx) => {
@@ -3531,12 +3548,13 @@ function buildItems(b, w, dow, wi, d){
         out.push("考后复盘 20 min：只记感受（哪几题没跟上、哪段听得最慌），当天不查答案");
       } else if (m === "2026-12-13"){
         out.push("四级复盘 40 min：听力错题对原文，写清原因（走神 / 词不认识 / 连读没听出）");
-        out.push("单词 30 min：" + wordBookName("cet4") + "（最后一天，下周起换考研红宝书）");
+        out.push("单词 30 min：四级单词（最后一天，下周起换考研红宝书）");
         out.push("阅读 30 min：四级阅读真题 1 篇（保持手感，不追新题）");
       } else {
         out.push("四级听力 60 min：四级听力真题（近 2 套里没精听过的，考前只做熟题）" +
           "（整套限时 25 min 不停 → 对答案 5 min → 精听错段 20 min → 跟读 10 min；错因四分类：连读/生词/语速/走神）");
-        out.push("单词 40 min：" + wordBookName("cet4") + wordUnit("cet4", d) + " 100 个 + 昨日错词（只记发音和拼写，不抄词根）");
+        out.push("单词 40 min：四级单词（两轮已过完）滚动复习 100 个 + 错词本"
+               + "（只记发音和拼写，不抄词根；考前不碰生词）");
         out.push("四级阅读真题 50 min：1 套限时 40 min + 精读错的那 2 篇 10 min");
       }
       return out;
