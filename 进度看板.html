@@ -302,7 +302,7 @@ const LANES = [
   {name:"算法竞赛", track:"algo", segs:[
     /* ⭐ 2026-10-18【C 方案：全面重排】前期提速 + 不压缩其他四线 + 算法加时 + 目标「省一 + 试 ICPC」。
        month 索引：2026.10 = 0 … 2027.6 = 8 … 2028.12 = 26（SPAN = 27）。
-       算法块：工作日 120 min / 周末 150 min / 期末缓冲 60 min → 全程 **461.5 h**（原 343.5 h）。
+       算法块：工作日 120 min / 周末 150 min / 期末缓冲 60 min → 全程 **457.5 h**（原 343.5 h）。
        课程真实体量（官网核实 2026-10-18）：基础课 45 h / 7 块，提高课 104 h / 6 章，进阶课 86 h / 7 章。 */
     {start:0,  len:2,  label:"基础课 ①②③ · 2h/天", kind:"base",
      tip:"2026.10–11（W1–W5）：基础算法 / 数据结构 / 搜索与图论，53 题 + 蓝书。原 7 周压到 5 周（前期提速）"},
@@ -355,8 +355,14 @@ const LANES = [
      tip:"2027.9–11：向量库进阶 → ★ 多模态文档 RAG（可部署 + 评测数字）→ LoRA 微调"},
     {start:14,   len:3,    label:"Agent · 部署 · 微调", kind:"proj",
      tip:"2027.12–2028.2：Agent + 部署 → LoRA/QLoRA 微调 → 作品集 + 复试话术"},
-    {start:17,   len:10,   label:"维护（考研冲刺）", kind:"pause",
-     tip:"2028.3–12：AI 转维护，每周 2 h 只保手感，时间交还数学强化 / 408 二轮 / 真题"}
+    {start:17,   len:2,    label:"机器学习补全（面试向）", kind:"ml",
+     tip:"2028.3–4：sklearn 实战 —— 线性/逻辑回归 → 决策树/随机森林 → XGBoost → 聚类/PCA → 评估调参 → 偏差方差与正则化。考研为主，AI 30–60 min/天"},
+    {start:19,   len:2,    label:"深度学习进阶 + 比赛", kind:"dl",
+     tip:"2028.5–6：ResNet/EfficientNet → YOLO 检测 → U-Net 分割 → 打一个 Kaggle/天池入门赛并复盘"},
+    {start:21,   len:2,    label:"论文精读 + 复试收口", kind:"proj",
+     tip:"2028.7–8：精读 3 篇（Attention / LoRA / RAG 综述）→ 20 个复试高频问答 → 简历与讲解定稿"},
+    {start:23,   len:4,    label:"维护（考研冲刺）", kind:"pause",
+     tip:"2028.9–12：AI 转维护，每周 2 h 只保手感，时间交还政治背诵 / 数学套卷 / 408 冲刺"}
   ]},
   {name:"考研·英语", track:"en", segs:[
     {start:0,  len:10, label:"英一 · 单词 + 长难句"},
@@ -438,7 +444,7 @@ const CARDS = [
          省赛冲刺(W23–W25) → 提高课第四~六章(W26–W30) → 第三章图论进阶(W31) →
          进阶课网络流(W32–W33) → 进阶课数据结构(W34–W35) → 收尾+ICPC 组队(W36)
    副线：W15–W30 LeetCode 面试线（服务复试机试）；W31 起换「洛谷/CF 刷题」（转 ICPC）
-   算法块：工作日 120 min / 周末 150 min / 期末缓冲 60 min → 全程 461.5 h（原 343.5 h）
+   算法块：工作日 120 min / 周末 150 min / 期末缓冲 60 min → 全程 457.5 h（原 343.5 h）
    ⚠️ 省赛：推算 W25 ≈ 2027-04-10（2026 年第十七届实测 04-11~04-12；2027 官方未公布）
    ⚠️ 六级：推算 W35 ≈ 2027-06-19（六月场固定在 6 月第 2/3 个周六）
    题号：W1–W30 用 AcWing；W32–W35 进阶课用洛谷模板题号（AcWing 进阶课题号无法核实，不编造）
@@ -446,7 +452,7 @@ const CARDS = [
 
 /* ===== 算法线（2026-10-18【C 方案】全面重排：省一 + 试 ICPC，前期提速，算法加时）=====
    课程体量（官网核实）：基础课 45h/7 块 · 提高课 104h/6 章 · 进阶课 86h/7 章 = 235h 视频
-   算法块：工作日 120 min / 周末 150 min / 期末缓冲 60 min → 全程 461.5 h（原 343.5 h）
+   算法块：工作日 120 min / 周末 150 min / 期末缓冲 60 min → 全程 457.5 h（原 343.5 h）
    ⚠️ 进阶课题号用洛谷模板（P3376/P3381/P3369/P3391/P3384/P3810/P3806/P3808/P4782/P3812），
       因为 AcWing 进阶课打卡题号无法核实——宁可用公认模板题，不编造题号。 */
 
@@ -540,100 +546,147 @@ const CARDS = [
  tasks:["【收尾】36 周模板清单按专题整理（基础 / DP / 搜索 / 图论 / 数学 / 数据结构 / 网络流）", "【ICPC】组队：找 2 个队友，确定分工（读题 / 主写 / 调试）", "【ICPC】打一场 5 小时模拟赛（3 人 / 1 台机 / 纸质题面 / 无网络）", "【ICPC】模拟赛复盘：时间分配与分工怎么改", "【ICPC】定 2027 秋季计划：报名时间 / 每周训练量 / 待补专题", "【收尾】写「算法线 36 周总结」"],
  quiz:["36 周下来，哪些模板能一遍写对、哪些还要翻笔记？", "ICPC 和你 2027 秋季的考研强化，时间怎么分？"]},
 
-{track:"ai", when:"W1 · 2026.10（10.19 起）", title:"基础营① 语法：变量/IO → 分支循环 → 函数 → 列表字典", deliv:"能不看答案写 4 个函数 + 一个猜数字游戏",
- kaoyan:"7 周基础营压到 4 周（每天内容更密），省下的 3 周还给项目① —— 否则项目① 永远只是「听说过」",
- tasks:["写 3 个小程序：温度换算、BMI、成绩等级判断（每个至少 3 组输入自测）","if/for/while：九九乘法表、1~100 求和与平均、判断素数","4 个函数：闰年、阶乘、最大公约数、列表求平均","⭐ 猜数字游戏（随机数 + 循环 + 判断 + 重开一局）","周日：整理进 week1/ + git init 首次提交"],
- quiz:["函数和脚本的区别是什么？"]},
+{track:"ai", when:"W1 · 2026.10（10-19 起）", title:"Python 复习（只 1 周）：语法 → 函数 → 文件/异常 → 环境", deliv:"能不看笔记写出「读文件 + 异常处理」的小工具",
+ kaoyan:"Python 只复习 1 周（原 4 周压缩），省下的时间直接进 NumPy 和项目①",
+ tasks:["语法速览：变量/类型/IO + if/for/while，写 3 个小程序（温度换算、BMI、九九乘法表）",
+  "函数 + 列表字典：闰年、阶乘、最大公约数、字典存成绩算平均/最高",
+  "文件读写 + 异常：with open(encoding='utf-8') 读中文 txt；try/except 捕获 FileNotFoundError / ValueError",
+  "json 四函数 dumps/loads/dump/load + venv/pip freeze/git init 提交",
+  "综合小工具：带容错的通用读文件函数 + week1/ 目录 + README 三步启动"],
+ quiz:["with open 不加 encoding 会出什么问题？","try/except 该捕获哪几种异常？"]},
 
-{track:"ai", when:"W2 · 2026.10", title:"基础营② 文件读写 + JSON + 异常", deliv:"一个「带容错的通用读文件函数」能复用",
- kaoyan:"这三个是后面所有项目的底座：读数据、存配置、坏数据不崩",
- tasks:["with open + encoding='utf-8' 读中文 txt；w/a/r+ 三种模式各试一次","json 四函数：dumps/loads/dump/load，成绩字典存盘再读回","try/except 捕获 ValueError / KeyError / FileNotFoundError","喂 3 种坏数据（不存在 / 编码错 / 空文件）验证不崩","周日：写成通用函数 + git 提交"],
- quiz:["w 和 a 模式的区别？为什么读文件一定要指定 encoding？"]},
+{track:"ai", when:"W2 · 2026.10", title:"NumPy：ndarray / 切片 / 广播 / 矩阵乘法", deliv:"能用矩阵化写法替掉所有 for 循环",
+ tasks:["array/zeros/ones/arange/linspace + shape/reshape/布尔索引","广播机制：标量 / 行向量 / 列向量分别怎么广播",
+  "dot vs @ vs 逐元素 *，三者区别写清楚","把矩阵乘 / 广播 / axis 三个坑各写一个「反例 + 正确写法」","整理一份 NumPy 小抄（5 个最常用操作 + 各自的坑）"],
+ quiz:["(3,) 和 (3,1) 广播结果差在哪？","axis=0 和 axis=1 分别沿哪个方向算？"]},
 
-{track:"ai", when:"W3 · 2026.11", title:"基础营③ 虚拟环境 + Git 完整流程", deliv:"换目录 clone 下来能直接跑",
- kaoyan:"环境问题吃掉的时间比想象多；一次搞明白，后面 30 周不再回头",
- tasks:["python -m venv .venv + 激活/退出（PowerShell 命令记牢）","pip 装包/列表/卸载 + pip freeze > requirements.txt","git init/add/commit/log/status + diff/checkout/reset","branch + merge，故意造一次冲突并解决","推到远端 + 换目录 clone 验证 + .gitignore"],
- quiz:["为什么要用虚拟环境？merge 冲突怎么定位？"]},
+{track:"ai", when:"W3 · 2026.11", title:"项目① v1：切段落 + 词频 + 余弦相似度 + Top-3", deliv:"能对着自己的文档提一个问题，返回最相关的 3 段",
+ tasks:["读 data/docs，按空行或长度切段落","统计词频（先 dict，再 Counter）","手写余弦相似度，输入一个问题返回 Top-3","用 10 个问题人工看命中情况"],
+ quiz:["词频为什么会被长文档带偏？","余弦相似度为什么不受长度影响？"]},
 
-{track:"ai", when:"W4 · 2026.11", title:"基础营④ pytest + logging + 目录整理", deliv:"项目「生产可用」：无 print、日志落文件、测试能跑",
- kaoyan:"测试和日志是「能长期维护」的分界线，也是面试常问的工程习惯",
- tasks:["pytest 第一个测试 + test_ 前缀发现规则","给成绩统计写 3 个测试：正常/边界/异常","pytest -v / -k / -x + 测试放进 tests/","logging 配置 level/format/输出文件，替换所有 print","目录结构 src/tests/data/README + 类型注解 + 提交"],
- quiz:["边界测试和异常测试分别测什么？"]},
+{track:"ai", when:"W4 · 2026.11", title:"项目① 评测：矩阵化 + 10 题评测集 + Hit@1/3", deliv:"能说出「这一版比上一版好在哪、好了多少」",
+ tasks:["用 NumPy 重写相似度（去掉 Python 循环）","建 10 题评测集，记录 Hit@1 / Hit@3","对比循环版与矩阵版的耗时"],
+ quiz:["Hit@3 高但 Hit@1 低说明什么？","矩阵化省下的到底是哪部分时间？"]},
 
-{track:"ai", when:"W5 · 2026.11", title:"NumPy：ndarray / 广播 / 矩阵乘法", deliv:"能把 Python 循环改成矩阵运算",
- kaoyan:"后面所有「快」都是从向量化来的，这周是为项目① 提速做准备",
- tasks:["array/zeros/ones/arange/linspace","shape 与切片：reshape / 布尔索引","广播机制：标量 / 行向量 / 列向量","dot / @ / * 三者区别（矩阵乘 vs 逐元素）","整理一份「5 个最常用操作 + 各自的坑」小抄"],
- quiz:["广播什么时候会报错？@ 和 * 差在哪？"]},
+{track:"ai", when:"W5 · 2026.11", title:"项目① 发布：目录 / README / 推远端 / 3 分钟讲解", deliv:"别人 clone 下来能照着跑通",
+ tasks:["整理目录 src/data/tests/README","README 写：问题 → 数据 → 方案 → 数字 → 怎么跑","推到 GitHub + 换目录 clone 验证","录一次 3 分钟讲解"],
+ quiz:["README 里最该写的是哪一段？","别人跑不起来的常见原因有哪些？"]},
 
-{track:"ai", when:"W6 · 2026.11", title:"项目① v1：切段落 + 词频 + 余弦相似度 + Top-3", deliv:"能给问题返回 3 段相关原文并带出处",
- kaoyan:"这是全计划第一个真项目：检索（RAG 的地基），面试能讲 10 分钟",
- tasks:["读 data/docs 切段落（按空行 / 按长度）","Counter 词频 + 构建词表","纯 Python 手写余弦相似度（不调库）","检索 Top-3 并带出处（文件名 + 段落号）","自己出 10 个问题试跑，记录命中几个"],
- quiz:["余弦相似度为什么能衡量「像不像」？"]},
+{track:"ai", when:"W6 · 2026.11", title:"pandas：DataFrame / CSV / 筛选 / groupby", deliv:"能把一份 CSV 读进来、清洗完、按组算出指标",
+ tasks:["DataFrame / Series 创建与查看（head / info / describe）","读 CSV、选列、条件筛选、排序","groupby + agg 做分组统计","处理缺失值（dropna / fillna）"],
+ quiz:["loc 和 iloc 的区别？","groupby 之后为什么常接 agg？"]},
 
-{track:"ai", when:"W7 · 2026.12（12 月恢复 AI，30 min/天）", title:"项目① 评测：NumPy 重写 + 评测集 + Hit@1/3", deliv:"有一份能复现的评测数字",
- kaoyan:"没有评测集的「优化」都是自嗨 —— 这周开始你会有数字",
- tasks:["用 NumPy 矩阵化重写相似度，去掉 Python 循环","对比两版：速度 + 结果是否一致（打印数字）","写 15–20 题迷你评测集（问题 + 正确答案出处）","跑评测集打印 Hit@1 / Hit@3","失败案例分析 + 按原因改一次（切分/词表/Top-K）"],
- quiz:["Hit@1 和 Hit@3 分别说明什么？"]},
+{track:"ai", when:"W7 · 2026.11–12", title:"matplotlib：plot / subplot / 保存图片", deliv:"能画出训练曲线并读图判断过拟合",
+ tasks:["plot / scatter / 标题 / 图例 / 坐标轴","subplot 画网格，保存 PNG","画一条 loss 曲线并标出拐点"],
+ quiz:["怎么从两张曲线看出过拟合？","保存图片为什么要 bbox_inches='tight'？"]},
 
-{track:"ai", when:"W8 · 2026.12（12 月恢复 AI，30 min/天）", title:"项目① 发布：目录 / README / 推远端 / 录 3 分钟", deliv:"别人拿到链接能跑起来",
- kaoyan:"作品集的第一块砖：能讲清楚「问题 → 方案 → 数字」",
- tasks:["整理目录 src/data/tests + README（问题→方案→数字）","补 .gitignore，确认无大文件/密钥","推到 devi-long，换目录 clone 验证能跑","写「踩过最大的坑」一节（写具体报错）","录 2 分钟讲解"],
- quiz:["能用一句话说清项目①在解决什么问题吗？"]},
+{track:"ai", when:"W8 · 2026.12（12-07 那一周）", title:"机器学习引子：数据划分 + 损失函数", deliv:"能讲清「训练/验证/测试」和「学习=让损失变小」",
+ kaoyan:"这一周仍在期末缓冲（30 min/天）；完整的机器学习放到 2028.3–4 补",
+ tasks:["训练/验证/测试划分，为什么不能拿测试集调参","K 折交叉验证（sklearn 跑一遍）","MSE 与交叉熵分别用在哪 + 手算一遍 MSE","写下「什么是学习」的一段解释（能讲 2 分钟）"],
+ quiz:["为什么不能拿测试集调参？","MSE 和交叉熵各自的适用场景？"]},
 
-{track:"ai", when:"W9 · 2026.12（12 月恢复 AI，30 min/天）", title:"pandas：DataFrame / CSV / 筛选 / groupby", deliv:"能把一份 CSV 分组统计出结果",
- kaoyan:"数据和表格是 AI 岗日常，pandas 是 Excel 的替代品",
- tasks:["DataFrame/Series 创建与查看（head/info/describe）","read_csv / to_csv（注意编码）","loc / iloc / 布尔条件筛选","groupby 聚合 + agg 传字典（多列不同聚合）","找一份 CSV 做一次分组统计"],
- quiz:["groupby 之后为什么常常要 reset_index？"]},
+{track:"ai", when:"W9–W11 · 2026.12–2027.1", title:"期末轻量复习（30 min/天）", deliv:"手感不掉，寒假能直接接上 PyTorch",
+ kaoyan:"期末优先，AI 只保留 30 min/天",
+ tasks:["重写 week1 的小程序（不看旧代码）","默写 NumPy 小抄 + 把项目① 相似度改成矩阵化","给项目① 补 3 个 pytest + 跑一遍评测集记基线","读一篇 RAG 入门文章，画一张 AI 学习地图定寒假计划"],
+ quiz:["项目① 现在的 Hit@1 是多少？","寒假第一件事是什么？"]},
 
-{track:"ai", when:"W10 · 2026.12（12 月恢复 AI，30 min/天）", title:"matplotlib：plot / subplot / 保存图片", deliv:"能画出 train-val 双曲线",
- kaoyan:"后面训练模型全靠看图判断，这周是「看得懂」的起点",
- tasks:["plot / scatter / 标题 / 图例 / 坐标轴","subplot 多子图布局 + 保存图片","把项目① 的对比结果画成条形图","提前练：画 train-val 双曲线","整理图片到 outputs/ + 提交"],
- quiz:["怎么从 loss 曲线判断过拟合？"]},
+{track:"ai", when:"W12–W14 · 2027.1", title:"期末暂停", deliv:"AI 全停，时间给期末",
+ tasks:["AI 不上新内容","有空只跑一遍旧代码保手感"],
+ quiz:[]},
 
-{track:"ai", when:"W11 · 2026.12（12 月恢复 AI，30 min/天）", title:"机器学习思维：数据划分 + 损失函数", deliv:"能讲清「训练/验证/测试」和「学习=让损失变小」",
- kaoyan:"概念先行：后面调参的所有动作都是在防过拟合",
- tasks:["训练/验证/测试划分，为什么不能拿测试集调参","K 折交叉验证（sklearn 跑一遍）","MSE 与交叉熵分别用在哪","手算一遍 MSE 再用代码验","写下「什么是学习」的一段解释（能讲 2 分钟）"],
- quiz:["为什么不能拿测试集调参？"]},
+{track:"ai", when:"W15–W18 · 2027.1–2（寒假）", title:"PyTorch 入门 + MNIST 全连接", deliv:"能自己写出训练循环并看懂 loss 曲线",
+ kaoyan:"寒假是 AI 的加时窗口",
+ tasks:["装 PyTorch(cu128) 并验证 GPU 可用","nn.Module 定义模型（forward 写清楚）+ Dataset/DataLoader",
+  "写完整训练循环：前向 → loss → 反向 → 更新 → 验证","跑 MNIST 全连接，记录基线准确率",
+  "正则化组合拳：dropout / weight decay / 早停，各去掉一次看掉多少"],
+ quiz:["zero_grad 忘了写会怎样？","train() 和 eval() 差别在哪？"]},
 
-{track:"ai", when:"W12–W14 · 2027.1（期末缓冲）", title:"期末缓冲：AI 暂停（只跑一遍旧代码）", deliv:"期末优先，AI 不添乱",
- kaoyan:"这三周主战场是期末。旧代码每天跑一遍保持手感即可",
- tasks:["每天把项目① 跑一遍（不推进新内容）","整理之前的笔记","期末考完再从 W15 的 PyTorch 开始"],
- quiz:["这学期 AI 线最该记住的一件事是什么？"]},
+{track:"ai", when:"W19–W22 · 2027.2–3", title:"CNN 原理 → 图像分类实战 → 工程化 → lr 调度与诊断", deliv:"能独立把一个图像分类任务调出结果",
+ tasks:["卷积 / stride / padding / 输出尺寸公式 / LeNet","换非 MNIST 数据集（FashionMNIST / CIFAR-10）做分类，记基线",
+  "TensorBoard 接进训练循环：看 loss / lr / 权重分布","lr 调度（StepLR / Cosine / ReduceLROnPlateau）+ warmup",
+  "诊断流程：loss 不降的 6 个排查顺序 + 混淆矩阵找最差 2 类"],
+ quiz:["卷积后特征图尺寸怎么算？","loss 不降先查什么？"]},
 
-{track:"ai", when:"2027.5 – 6", title:"Transformer 原理 + 手写 attention", deliv:"能白板画出 attention 的数据流",
- kaoyan:"考研：数学基础一轮进行中",
- tasks:["看完 3Blue1Brown 的 Transformer 系列","手写 scaled dot-product attention（不抄）","搞清 Q / K / V 各是什么、为什么除以 √d","理解 multi-head 在并行看不同关系","搞清为什么是 O(n²)"],
- quiz:["Q、K、V 分别代表什么？","为什么除以 √d？"]},
+{track:"ai", when:"W23–W26 · 2027.3–4", title:"RNN/LSTM → Transformer 原理 → 搭 mini Transformer → 预训练/微调", deliv:"能手写 attention 并搭出一个能跑的小 Transformer",
+ tasks:["RNN 原理 + 梯度消失；LSTM 三个门手推","3Blue1Brown Transformer 系列 + 手写 scaled dot-product attention",
+  "搞清 Q/K/V、为什么除以 √d、multi-head、O(n²)","搭 mini Transformer 训练一个小语言模型",
+  "预训练 + 微调概念，搞清「为什么要先预训练」"],
+ quiz:["为什么除以 √d？","KV cache 省的是哪部分计算？"]},
 
-{track:"ai", when:"2027.7 – 8（暑假）", title:"手写 GPT + 项目③", deliv:"约 300 行 GPT，能训练并生成文本",
+{track:"ai", when:"W27–W30 · 2027.4–5", title:"项目② 图像分类：baseline → 改进 → 迁移学习 → 消融", deliv:"一个有消融实验和错误分析的项目",
+ tasks:["v1：定方向 + 读 3 篇论文摘要 + baseline 跑通记数字","v1 改进：数据增强 / 更深网络 / lr 调度，选一个做对比",
+  "v2 迁移学习：用预训练 ResNet 替换自己搭的 CNN","收尾：消融实验（去掉增强/迁移各掉多少）+ 错误分析 + 作品集一页"],
+ quiz:["迁移学习为什么在小数据集上更好？","消融实验要固定哪些变量？"]},
+
+{track:"ai", when:"W31–W33 · 2027.5–6", title:"文档/作品集一次收口 + 复习 + 面试 20 题", deliv:"两个项目能讲、能跑、数字对得上",
+ tasks:["README 写清：问题 → 数据 → 方案 → 权衡 → 数字（项目①② 各一份）","新建环境按 requirements 重跑两个项目 + 核对所有数字",
+  "复习：损失函数家族 / 优化器 / 评估指标 / 过拟合诊断","写 AI 面试常问 20 题自查表 + 自测 + 补答不上的",
+  "36 周总结 + 定暑假计划（手写 GPT + 项目③）"],
+ quiz:["两个项目各能讲几分钟？","哪一类题你答不上来？"]},
+
+{track:"ai", when:"W34–W36 · 2027.6", title:"项目③ RAG：向量库 → RAG 骨架 → 部署", deliv:"一个能问文档并带出处回答的系统",
+ tasks:["定方向（文档问答）+ 读 3 篇 RAG 论文摘要 + 选向量库（FAISS / Chroma）",
+  "把项目① 的检索换成向量检索，对比命中率与速度","搭 RAG 骨架：chunk → embed → 检索 → 拼 prompt → 生成",
+  "10 题评测集跑 baseline + 改 chunk 策略看数字","FastAPI 包接口（/ask 返回答案 + 出处）+ 3 步启动说明"],
+ quiz:["chunking 切太碎/太大分别出什么问题？","检索没命中时模型会怎样？"]},
+
+{track:"ai", when:"2027.7 – 8（暑假）", title:"手写 GPT + 项目③ 深化", deliv:"约 300 行 GPT，能训练并生成文本",
  kaoyan:"这是假期的主战场，每天可以投 6–7 小时",
- tasks:["跟完 Karpathy 的 Let's build GPT，自己敲一遍","实现 tokenizer / embedding / 位置编码","实现残差、LayerNorm、前馈层","训练并采样生成文本，看着 loss 掉下去","整理成项目③ + 实验笔记（「改了什么 → 数字怎么变」）"],
+ tasks:["跟完 Karpathy 的 Let's build GPT，自己敲一遍","实现 tokenizer / embedding / 位置编码",
+  "实现残差、LayerNorm、前馈层","训练并采样生成文本，看着 loss 掉下去",
+  "整理成项目③ + 实验笔记（改了什么 → 数字怎么变）"],
  quiz:["Pre-LN 和 Post-LN 的差别？","KV cache 省的是哪部分计算？"]},
 
 {track:"ai", when:"2027.9 – 10", title:"检索进阶 + 向量库", deliv:"能区分「没检索到」和「检索到但答错」",
- kaoyan:"考研：数学 1000 题基础篇 + 408 操作系统",
- tasks:["用 embedding 模型把文档向量化，灌进向量库（FAISS / Chroma）","实现完整的「检索 → 拼上下文 → 生成」链路","加引用：答案必须指出第几个文件、哪一段","加 rerank 或混合检索（BM25 + 向量）","建 20 题评测集，记录每一版的命中率"],
- quiz:["chunking 切太碎/太大分别出什么问题？","向量检索和关键词检索各自擅长什么？"]},
+ kaoyan:"考研：数学强化（2027.9 起）+ 408 二轮",
+ tasks:["用 embedding 模型把文档向量化，灌进向量库","实现完整的「检索 → 拼上下文 → 生成」链路",
+  "加引用：答案必须指出第几个文件、哪一段","加 rerank 或混合检索（BM25 + 向量）","建 20 题评测集，记录每一版命中率"],
+ quiz:["向量检索和关键词检索各自擅长什么？","rerank 加在哪一步？"]},
 
 {track:"ai", when:"2027.11", title:"★ 主力作品：多模态文档 RAG", deliv:"可部署的文档问答系统 + 评测数字",
- tasks:["处理扫描件 / PDF / 表格（版面解析：MinerU / PaddleOCR 任选）","答案带原文位置引用（第几页哪个区域）","能说出 RAG 效果差的 5 个原因和各自改法","FastAPI 包成接口 + Docker 打包","README 写清：问题 / 方案 / 权衡 / 数字"],
+ tasks:["处理扫描件 / PDF / 表格（MinerU / PaddleOCR 任选）","答案带原文位置引用（第几页哪个区域）",
+  "能说出 RAG 效果差的 5 个原因和各自改法","FastAPI 包成接口 + Docker 打包","README 写清：问题 / 方案 / 权衡 / 数字"],
  quiz:["表格里的数字为什么难抽？","你的评测集有区分度吗？"]},
 
 {track:"ai", when:"2027.12", title:"Agent + 部署", deliv:"一个真能替你干活的 Agent",
- kaoyan:"考研：政治开始了解（9 月后正式启动）",
- tasks:["读 ReAct，实现「思考 → 调用 → 观察」循环","给工具加失败重试和兜底","做一个有用的 Agent（读文档出报告 / 代码库问答）","用 Ollama 或 vLLM 部署，本地能访问","列出它的 3 种失败模式和兜底设计"],
+ kaoyan:"考研：408 二轮 + 英语真题；政治 2028.7 才起",
+ tasks:["读 ReAct，实现「思考 → 调用 → 观察」循环","给工具加失败重试和兜底",
+  "做一个有用的 Agent（读文档出报告 / 代码库问答）","用 Ollama 或 vLLM 部署，本地能访问","列出它的 3 种失败模式和兜底设计"],
  quiz:["谁决定调用工具，谁执行工具？","Agent 最常见的失败是什么？"]},
 
 {track:"ai", when:"2028.1", title:"LoRA / QLoRA 微调", deliv:"微调前后对比 + 能判断「该不该微调」",
- tasks:["造 500–2000 条自己的数据集（清洗、去重）","用 LLaMA-Factory 或 Unsloth 做一次 LoRA 微调","和「只改 prompt」「上 RAG」做对比","做一次量化（GGUF/GPTQ），记录速度与质量损失","说清这个需求为什么必须/不必微调"],
+ tasks:["造 500–2000 条自己的数据集（清洗、去重）","用 LLaMA-Factory 或 Unsloth 做一次 LoRA 微调",
+  "和「只改 prompt」「上 RAG」做对比","做一次量化（GGUF/GPTQ），记录速度与质量损失","说清这个需求为什么必须/不必微调"],
  quiz:["LoRA 为什么省显存？","量化的代价体现在哪？"]},
 
 {track:"ai", when:"2028.2", title:"作品集 + 复试话术", deliv:"3 个项目上 GitHub + 能讲 30 分钟",
  kaoyan:"已定：不写论文、不投期刊、不申大创 —— 复试靠「初试分数 + 省一 + 项目」说话",
- tasks:["3 个项目整理上 GitHub（devi-long），README 写清方案/权衡/数字","每个项目录 3 分钟讲解","准备高频追问：attention 复杂度 / RAG 难点 / LoRA 原理","简历上写出「文档智能 Document AI」定位","整理成一页纸，随时能给老师看","确认不做：论文 / 期刊 / 大创（决定不再改）"],
+ tasks:["3 个项目整理上 GitHub，README 写清方案/权衡/数字","每个项目录 3 分钟讲解",
+  "准备高频追问：attention 复杂度 / RAG 难点 / LoRA 原理","简历上写出「文档智能 Document AI」定位"],
  quiz:["老师问「最难的地方」，你怎么答？","哪个数字证明你的方案有效？"]},
 
-{track:"ai", when:"2028.3 起", title:"转维护模式", deliv:"每周 2 小时，只保手感",
+{track:"ai", when:"2028.3 – 4", title:"机器学习补全（面试向）", deliv:"能用 sklearn 跑通「数据 → 模型 → 评估 → 调参」，讲清 6 个高频面试题",
+ kaoyan:"考研：数学真题 + 408 真题二刷为主，AI 每天 30–60 min —— 这是复试投资，不是主线",
+ tasks:["线性回归 / 逻辑回归：sklearn 跑通，讲清「损失函数怎么来」","决策树 / 随机森林：能解释「为什么集成比单棵树稳」",
+  "XGBoost / LightGBM：调一遍参数，看特征重要性","K-means 聚类 + PCA 降维：各跑一次，说清适用场景",
+  "评估与调参：混淆矩阵 / ROC-AUC / 网格搜索 + 交叉验证","偏差-方差 + L1/L2 正则化：写成一页能讲的笔记"],
+ quiz:["随机森林为什么不容易过拟合？","AUC 很高但业务效果差，可能是什么原因？"]},
+
+{track:"ai", when:"2028.5 – 6", title:"深度学习进阶 + 一个比赛型项目", deliv:"打一个入门赛，成绩进前 30%，并写出复盘",
+ kaoyan:"考研：数学 8 套卷 + 408 真题二刷；AI 仍控制在 30–60 min/天",
+ tasks:["ResNet / EfficientNet：为什么残差、深度可分离卷积省了什么","YOLO 目标检测：跑通推理 + 自己改一个超参看效果",
+  "U-Net 语义分割：完整训练一次，看 IoU","数据增强与类别不平衡（重采样 / focal loss）",
+  "打一个 Kaggle / 天池入门赛（表格或图像任选），目标前 30%","比赛复盘：哪些改进真有效、哪些是噪声"],
+ quiz:["ResNet 解决的是什么问题？","比赛里最有效的那个改进，为什么有效？"]},
+
+{track:"ai", when:"2028.7 – 8", title:"论文精读 + 复试问答收口", deliv:"能讲 3 篇论文 + 20 个复试高频问题都有答案",
+ kaoyan:"考研：政治启动 + 英语真题套卷 + 数学 8 套卷；AI 降到 30 min/天，重点是「讲得清」而不是「学新的」",
+ tasks:["精读 3 篇：Attention Is All You Need / LoRA / 一篇 RAG 综述","每篇写 5 行：解决什么、怎么做、结果、局限",
+  "整理 20 个复试高频问题 + 答案（ML / DL / RAG / 项目各 5 个）","简历定稿 + 3 个项目各录 3 分钟讲解",
+  "模拟一次 20 分钟复试（自问自答并录音，回听卡壳处）","整理一页纸「项目速览」，随时能给老师看"],
+ quiz:["Attention 的计算复杂度是多少？","你项目里最难的地方在哪，怎么解决的？"]},
+
+{track:"ai", when:"2028.9 – 12", title:"转维护模式", deliv:"每周 2 小时，只保手感",
  tasks:["每周 2 小时：跑一遍已有项目，确认还能跑通","不开新坑、不追新技术","复试前一周把 3 个项目重新跑一遍 + 讲一遍"],
  quiz:[]},
 
