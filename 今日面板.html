@@ -3603,7 +3603,7 @@ function buildItems(b, w, dow, wi, d){
     if (inFinEn){
       const wknd = (dow === 0 || dow === 6);
       const wordLine = (m) => (stage === "cet6")
-        ? ("单词 " + m + " min：六级词书 " + cet6UnitText(FIN_DAY) + "｜红宝书 " + redBook(FIN_DAY))
+        ? ("单词 " + m + " min：红宝书 " + redBook(FIN_DAY) + "（六级词汇已含在内）")
         : ("单词 " + m + " min：" + wordTag(stage, FIN_DAY));
       const enMatF = (w && w.enMaterial) || [];
       /* 期末缓冲周：原来固定取 enMatF[1]，5 个工作日全在精读同一篇；
@@ -3652,7 +3652,7 @@ function buildItems(b, w, dow, wi, d){
 
     if (isWeekend){
       if (stage === "cet6"){
-        out.push("单词 45 min（六级 25 + 红宝书 20）：六级词书 " + cet6UnitText(d) + "｜红宝书 " + redBook(d));
+        out.push("单词 30 min：红宝书 " + redBook(d) + "（六级词汇已含在内）");
       } else {
         out.push("单词 30 min：" + wordTag(stage, d));
       }
@@ -3698,7 +3698,7 @@ function buildItems(b, w, dow, wi, d){
       const listenMat = enMat[0] || "";
       const realListen = /听力/.test(listenMat);
       const readMat = enMat[1 + Math.min(Math.max(dow - 1, 0), 1)] || "英一真题精读";
-      out.push("单词 40 min（六级 20 + 红宝书 20）：六级词书 " + cet6UnitText(d) + "｜红宝书 " + redBook(d) + "（只背不听课）");
+      out.push("单词 25 min：红宝书 " + redBook(d) + "（考研 5500 词已含六级词汇，六级词书不再单背）");
       if (realListen){
         /* 工作日只做**单篇**（一套 30 min 装不进 30 min 的块里）：
            section 按星期轮换，避免天天只听同一种题型 */
