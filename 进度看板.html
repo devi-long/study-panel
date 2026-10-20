@@ -326,12 +326,14 @@ const LANES = [
     /* ⭐ 2026-10-18 用户要求「把 AI 线里的机器学习 / 深度学习在甘特图上标出来」。
        month0 = 2026.10。kind 决定配色：eng 工程/基础 · data 数据处理 · ml 机器学习
        · dl 深度学习 · proj 项目/作品集 · pause 期末暂停。 */
-    {start:0,  len:2,  label:"Python 手感·工程化", kind:"eng",
-     tip:"2026.10–11（W1–W5）：语法复习 / 文件 / 异常 / JSON / Git / pytest / logging / NumPy 矩阵化"},
+    {start:0,  len:1,  label:"Python 复习 · NumPy", kind:"eng",
+     tip:"2026.10（W1–W2）：**Python 只复习 1 周**（语法 / 函数 / 文件 / 异常 / json / venv+git 一次过）；W2 直接进 NumPy 矩阵化"},
     {start:1,  len:1,  label:"项目① 迷你检索", kind:"proj",
-     tip:"2026.11–12（W6–W8）：切段落 → 词频 → 余弦相似度 → Top-3 → 10 题评测集 → 发布（RAG 的地基）"},
-    {start:2,  len:1,  label:"pandas·画图·ML 起步", kind:"data",
-     tip:"2026.12–2027.1（W9–W11）：pandas / matplotlib + 训练集验证集测试集、K 折、MSE 与交叉熵"},
+     tip:"2026.11（W3–W5）：切段落 → 词频 → 余弦相似度 → Top-3 → 10 题评测集 → 发布（RAG 的地基）"},
+    {start:1,  len:2,  label:"pandas·画图·ML 起步", kind:"data",
+     tip:"2026.11–12（W6–W8）：pandas / matplotlib + 训练集验证集测试集、K 折、MSE 与交叉熵"},
+    {start:2,  len:2,  label:"期末轻量复习", kind:"eng",
+     tip:"2026.12–2027.1（W9–W11，30 min/天）：重写小程序 / 默写 NumPy 小抄 / 读 RAG 入门 / 定寒假计划"},
     {start:3,  len:1,  label:"期末暂停", kind:"pause",
      tip:"2027.1（01-01~01-24，W12–W14）：期末优先，AI 暂停"},
     {start:3,  len:2,  label:"PyTorch·MNIST", kind:"dl",
