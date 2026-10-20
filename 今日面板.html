@@ -3516,6 +3516,7 @@ function buildItems(b, w, dow, wi, d){
       }
       return "（两轮已过完 · 只滚错词）";
     }
+    if (st === "post") return redBook(day) ? "（" + redBook(day) + "）" : "";
     if (st !== "cet6") return "";
     const a = parseDay("2027-01-18"), b = parseDay("2027-06-11");
     if (day > b) return "（10 单元已背完 · 滚动复习 + 错词本）";
@@ -3524,9 +3525,25 @@ function buildItems(b, w, dow, wi, d){
     const k = Math.max(1, Math.min(total, Math.floor(((day - a) / DAY) / (span / total)) + 1));
     return "（第 " + k + "/" + total + " 单元，本单元视频 " + CET6_UNIT_MIN[k - 1] + " min）";
   };
-  const wordTag = (st, day) => wordBookName(st) + (st === "post" ? "" : wordUnit(st, day));
+  const wordTag = (st, day) => wordBookName(st) + wordUnit(st, day);
+  /* 红宝书：27 版 56 个 Unit（必考词 U1–U26 / 基础词 U1–U30），纸质背诵、没有视频。
+     12-14 起每周 2 个 Unit（3.5 天一个），不设 13 周期限，走完为止。 */
+  /* 六级词书单元的文字（不带外层括号，方便拼「20 min」） */
+  const cet6UnitText = (day) => {
+    const u = wordUnit("cet6", day);
+    return u.replace(/^（/, "").replace(/）$/, "").replace("，本单元视频", "（视频").replace(/ min$/, " min）");
+  };
+  const redBook = (day) => {
+    if (!day) return "";
+    const a = parseDay("2026-12-14");
+    const idx = Math.floor((day - a) / DAY);
+    if (idx < 0) return "";
+    const k = Math.min(56, Math.floor(idx * 2 / 7) + 1);
+    if (k <= 26) return "必考词 Unit " + k + "/26";
+    return "基础词 Unit " + (k - 26) + "/30";
+  };
   const wordProg2 = (st, idx) => {
-    if (st === "post") return "（一轮 · 第 " + Math.max(1, Math.min(5, idx - 7)) + "/5 组）";
+    if (st === "post") return "（" + redBook(d) + "）";
     return wordUnit(st, d);
   };
   if (b.src === "en"){
@@ -3585,7 +3602,9 @@ function buildItems(b, w, dow, wi, d){
     const inFinEn = (FIN_DAY >= FINAL_FROM && FIN_DAY <= FINAL_TO);
     if (inFinEn){
       const wknd = (dow === 0 || dow === 6);
-      const wordLine = (m) => "单词 " + m + " min：" + wordTag(stage, FIN_DAY);
+      const wordLine = (m) => (stage === "cet6")
+        ? ("单词 " + m + " min：六级词书 " + cet6UnitText(FIN_DAY) + "｜红宝书 " + redBook(FIN_DAY))
+        : ("单词 " + m + " min：" + wordTag(stage, FIN_DAY));
       const enMatF = (w && w.enMaterial) || [];
       /* 期末缓冲周：原来固定取 enMatF[1]，5 个工作日全在精读同一篇；
          改成隔天轮换（一/三/五 用 [1]，二/四 用 [2]）。 */
@@ -3632,7 +3651,11 @@ function buildItems(b, w, dow, wi, d){
     }
 
     if (isWeekend){
-      out.push("单词 30 min：" + wordTag(stage, d));
+      if (stage === "cet6"){
+        out.push("单词 45 min（六级 25 + 红宝书 20）：六级词书 " + cet6UnitText(d) + "｜红宝书 " + redBook(d));
+      } else {
+        out.push("单词 30 min：" + wordTag(stage, d));
+      }
       /* ⭐ 2026-10-18 用户指出「一套听力要 25 min」—— 工作日 30 min 只够做**单篇**，
          整套限时必须放周末（周六 30 min 四级 / 40 min 六级），周日只复盘错段。 */
       const satList = (stage === "cet4");
@@ -3675,7 +3698,7 @@ function buildItems(b, w, dow, wi, d){
       const listenMat = enMat[0] || "";
       const realListen = /听力/.test(listenMat);
       const readMat = enMat[1 + Math.min(Math.max(dow - 1, 0), 1)] || "英一真题精读";
-      out.push("单词 30 min：" + wordTag("cet6", d));
+      out.push("单词 40 min（六级 20 + 红宝书 20）：六级词书 " + cet6UnitText(d) + "｜红宝书 " + redBook(d) + "（只背不听课）");
       if (realListen){
         /* 工作日只做**单篇**（一套 30 min 装不进 30 min 的块里）：
            section 按星期轮换，避免天天只听同一种题型 */
