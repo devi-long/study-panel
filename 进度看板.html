@@ -250,6 +250,10 @@
       <div class="pct" id="pct">0%</div>
     </div>
     <div class="sub2" id="count">已完成 0 / 0 项</div>
+    <div style="margin:8px 0 0">
+      <button onclick="syncOpen()" title="把勾选存到 GitHub Gist，换设备也能同步">☁️ 云同步 · 换设备后勾选不丢</button>
+      <span id="syncTopState" style="font-size:12px;color:#8b949e;margin-left:8px">未连接</span>
+    </div>
 
     <div class="next" id="nextbox">下一件该做的事：<b>—</b></div>
   </header>
@@ -275,24 +279,6 @@
     </div>
   </div>
 
-  <div class="chips" id="chips"></div>
-  <div class="grid" id="grid"></div>
-
-  <div class="archbox" id="archbox" style="display:none">
-    <details>
-      <summary id="archtitle">归档</summary>
-      <div class="grid archgrid" id="archlist"></div>
-    </details>
-  </div>
-
-  <div class="tools">
-    <button onclick="expandAll(true)">展开全部自测</button>
-    <button onclick="expandAll(false)">收起全部自测</button>
-    <button onclick="clearAll()">清空所有勾选</button>
-    <button onclick="window.print()">打印 / 存 PDF</button>
-    <button onclick="syncOpen()" title="把勾选存到 GitHub Gist，换设备也能同步">☁️ 云同步</button>
-  </div>
-
   <div class="syncbox" id="syncPanel" style="display:none">
     <div class="synchead">☁️ 云同步 <span id="syncState">未连接</span></div>
     <div id="syncSetup">
@@ -314,6 +300,26 @@
       所以不会互相抹掉；但两份各自都改过时，先想清楚保哪一份。<br>
       拉取后如果今日面板已经开着，刷新一下那个页面才会看到新的每日勾选。</p>
   </div>
+
+  <div class="chips" id="chips"></div>
+  <div class="grid" id="grid"></div>
+
+  <div class="archbox" id="archbox" style="display:none">
+    <details>
+      <summary id="archtitle">归档</summary>
+      <div class="grid archgrid" id="archlist"></div>
+    </details>
+  </div>
+
+  <div class="tools">
+    <button onclick="expandAll(true)">展开全部自测</button>
+    <button onclick="expandAll(false)">收起全部自测</button>
+    <button onclick="clearAll()">清空所有勾选</button>
+    <button onclick="window.print()">打印 / 存 PDF</button>
+    <button onclick="syncOpen()">☁️ 云同步（回到顶部）</button>
+  </div>
+
+
 
   <footer>
     进度自动保存在浏览器本地；换设备就点「☁️ 云同步」（和今日面板共用同一份云端备份）· 点顶部「线」可以只看某一条线（算法竞赛 / Python·AI / 考研）<br>
@@ -989,11 +995,23 @@ function syncUI(){
       ? ("已连接" + (c.last ? " · 上次 " + humanTime(c.last) : ""))
       : "未连接";
   }
+  /* 页头那个状态也要刷，否则从顶部看不出连没连 */
+  var st2 = document.getElementById("syncTopState");
+  if (st2){
+    st2.textContent = c.token
+      ? ("已连接" + (c.last ? " · 上次 " + humanTime(c.last) : ""))
+      : "未连接";
+    st2.style.color = c.token ? "#3fb950" : "#8b949e";
+  }
 }
 function syncOpen(){
   var p = document.getElementById("syncPanel");
   if (!p) return;
-  p.style.display = (p.style.display === "none" || !p.style.display) ? "block" : "none";
+  var open = (p.style.display === "none" || !p.style.display);
+  p.style.display = open ? "block" : "none";
+  if (open && p.scrollIntoView){
+    try { p.scrollIntoView({ behavior: "smooth", block: "center" }); } catch(e){ p.scrollIntoView(); }
+  }
   syncUI();
 }
 function syncReq(method, path, body){
