@@ -212,6 +212,12 @@
     *{transition:none!important;animation:none!important}
     html{scroll-behavior:auto}
   }
+/* ---- 云同步（和今日面板同一套协议）---- */
+.syncbox{margin-top:13px;background:var(--card2,#1b2129);border:1px solid var(--line,#232b36);border-radius:10px;padding:14px 16px}
+.synchead{font-size:14px;font-weight:600;margin-bottom:8px}
+.synctip{font-size:12px;color:#8b949e;line-height:1.8;margin:6px 0 10px}
+.syncmsg{font-size:12px;min-height:16px;margin-top:6px;color:var(--green,#3fb950)}
+.syncauto{font-size:12px;color:#8b949e;display:block;margin-top:4px}
 </style>
 </head>
 <body>
@@ -284,10 +290,33 @@
     <button onclick="expandAll(false)">收起全部自测</button>
     <button onclick="clearAll()">清空所有勾选</button>
     <button onclick="window.print()">打印 / 存 PDF</button>
+    <button onclick="syncOpen()" title="把勾选存到 GitHub Gist，换设备也能同步">☁️ 云同步</button>
+  </div>
+
+  <div class="syncbox" id="syncPanel" style="display:none">
+    <div class="synchead">☁️ 云同步 <span id="syncState">未连接</span></div>
+    <div id="syncSetup">
+      <p class="synctip">换设备 / 换浏览器后看板勾选不再丢：存进你自己的 GitHub Gist。<br>
+        和「今日面板」<b>共用同一个 token 和同一个云端文件</b> —— 在哪边连一次，两边都通。<br>
+        需要一个 token（只勾 <b>gist</b> 权限就够）：
+        <a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=study-panel" target="_blank" rel="noopener">点这里创建</a></p>
+      <input id="syncToken" type="password" placeholder="粘贴 token（ghp_ 开头或 github_pat_ 开头）" autocomplete="off">
+      <button onclick="syncConnect()">连接 / 创建云端备份</button>
+    </div>
+    <div id="syncOps" style="display:none">
+      <button onclick="syncPush()">⬆️ 上传到云</button>
+      <button onclick="syncPull()">⬇️ 从云下载</button>
+      <button onclick="syncForget()">断开</button>
+      <label class="syncauto"><input type="checkbox" id="syncAuto" onchange="syncToggleAuto()"> 自动同步（改完 4 秒后自动上传）</label>
+    </div>
+    <div id="syncMsg" class="syncmsg"></div>
+    <p class="synctip">⚠️ 冲突规则：<b>整体覆盖</b>，最后上传的那份赢。推送时会把今日面板的每日勾选一起带上，
+      所以不会互相抹掉；但两份各自都改过时，先想清楚保哪一份。<br>
+      拉取后如果今日面板已经开着，刷新一下那个页面才会看到新的每日勾选。</p>
   </div>
 
   <footer>
-    进度自动保存在浏览器本地 · 点顶部「线」可以只看某一条线（算法竞赛 / Python·AI / 考研）<br>
+    进度自动保存在浏览器本地；换设备就点「☁️ 云同步」（和今日面板共用同一份云端备份）· 点顶部「线」可以只看某一条线（算法竞赛 / Python·AI / 考研）<br>
     不写笔记：自测能不看资料答出来就打勾 · 每周五 git 提交 · 英语每天 30 分钟一天不断
   </footer>
 </div>
@@ -873,6 +902,201 @@ if (savedFP && savedFP !== FINGERPRINT){
   lsSet(KEY, "{}");
 }
 lsSet(FP_KEY, FINGERPRINT);
+/* ==== 云同步开始 ====
+   和「今日面板」同一套协议、同一个 gist 文件（dsh-progress.json）、
+   同一组连接配置（dsh-sync-token / dsh-sync-gist），所以只要连一次，两边都通。
+   载荷里同时装 dsh-today-* 和 dsh-plan-*：从哪边推都不会把另一边从云端抹掉。 */
+var SYNC_TOKEN = "dsh-sync-token";
+var SYNC_GIST  = "dsh-sync-gist";
+var SYNC_AUTO  = "dsh-sync-auto";
+var SYNC_LAST  = "dsh-sync-last";
+var SYNC_FILE  = "dsh-progress.json";
+var SYNC_API   = "https://api.github.com";
+var syncTimer  = null;
+
+/* 和今日面板逐字一致的排除规则，改一边就必须改另一边 */
+function syncWanted(k){
+  if (!k) return false;
+  if (k.indexOf("preview") >= 0 || k.indexOf("savedAt") >= 0) return false;
+  if (k.indexOf(":fp") >= 0) return false;
+  return k.indexOf("dsh-today-") === 0 || k.indexOf("dsh-plan-") === 0;
+}
+function humanTime(iso){
+  if (!iso) return "";
+  var t = new Date(iso).getTime();
+  if (isNaN(t)) return "";
+  var s = (Date.now() - t) / 1000;
+  if (s < 60) return "刚刚";
+  if (s < 3600) return Math.floor(s / 60) + " 分钟前";
+  if (s < 86400) return Math.floor(s / 3600) + " 小时前";
+  return Math.floor(s / 86400) + " 天前";
+}
+function syncCfg(){
+  return {
+    token: lsGet(SYNC_TOKEN) || "",
+    gist:  lsGet(SYNC_GIST)  || "",
+    auto:  lsGet(SYNC_AUTO) === "1",
+    last:  lsGet(SYNC_LAST)  || ""
+  };
+}
+function syncCollect(){
+  var keys = {};
+  try {
+    for (var i = 0; i < localStorage.length; i++){
+      var k = localStorage.key(i);
+      if (syncWanted(k)) keys[k] = JSON.parse(localStorage.getItem(k) || "null");
+    }
+  } catch(e){}
+  return { app: "dsh-plan-board", version: 1,
+           exportedAt: new Date().toISOString(), keys: keys };
+}
+function syncApply(payload){
+  if (!payload || typeof payload !== "object" || !payload.keys){
+    throw new Error("云端数据格式不对");
+  }
+  var n = 0;
+  Object.keys(payload.keys).forEach(function(k){
+    if (!syncWanted(k)) return;
+    lsSet(k, JSON.stringify(payload.keys[k]));
+    n++;
+  });
+  /* 重新读回看板状态；指纹按本机当前结构重写，避免下一次加载误判「结构变了」 */
+  try {
+    var s2 = JSON.parse(lsGet(KEY) || "{}");
+    state = (s2 && typeof s2 === "object" && !Array.isArray(s2)) ? s2 : {};
+  } catch(e){ state = {}; }
+  lsSet(FP_KEY, FINGERPRINT);
+  if (typeof render === "function") render();
+  return n;
+}
+function syncMsg(t, bad){
+  var el = document.getElementById("syncMsg");
+  if (!el) return;
+  el.textContent = t;
+  el.style.color = bad ? "#f85149" : "#3fb950";
+}
+function syncUI(){
+  var c = syncCfg();
+  var setup = document.getElementById("syncSetup");
+  var ops   = document.getElementById("syncOps");
+  var st    = document.getElementById("syncState");
+  var auto  = document.getElementById("syncAuto");
+  if (setup) setup.style.display = c.token ? "none" : "";
+  if (ops)   ops.style.display   = c.token ? "" : "none";
+  if (auto)  auto.checked = !!c.auto;
+  if (st){
+    st.textContent = c.token
+      ? ("已连接" + (c.last ? " · 上次 " + humanTime(c.last) : ""))
+      : "未连接";
+  }
+}
+function syncOpen(){
+  var p = document.getElementById("syncPanel");
+  if (!p) return;
+  p.style.display = (p.style.display === "none" || !p.style.display) ? "block" : "none";
+  syncUI();
+}
+function syncReq(method, path, body){
+  var c = syncCfg();
+  var opt = { method: method, headers: {
+    "Authorization": "Bearer " + c.token,
+    "Accept": "application/vnd.github+json" } };
+  if (body){
+    opt.headers["Content-Type"] = "application/json";
+    opt.body = JSON.stringify(body);
+  }
+  return fetch(SYNC_API + path, opt).then(function(r){
+    return r.text().then(function(t){
+      var j = null;
+      try { j = JSON.parse(t); } catch(e){}
+      if (!r.ok){
+        var m = (j && j.message) ? j.message : ("HTTP " + r.status);
+        throw new Error(m);
+      }
+      return j;
+    });
+  });
+}
+function syncGistBody(){
+  var payload = syncCollect();
+  var files = {};
+  files[SYNC_FILE] = { content: JSON.stringify(payload, null, 2) };
+  return { files: files };
+}
+function syncConnect(){
+  var inp = document.getElementById("syncToken");
+  var tok = String((inp && inp.value) || "").trim();
+  if (!tok){ syncMsg("先粘贴 token", true); return; }
+  lsSet(SYNC_TOKEN, tok);
+  syncMsg("正在验证 token …");
+  syncReq("GET", "/user").then(function(u){
+    syncMsg("已登录：" + u.login + "，正在创建云端备份 …");
+    return syncReq("POST", "/gists", {
+      description: "study-panel progress backup",
+      public: false,
+      files: syncGistBody().files
+    });
+  }).then(function(g){
+    lsSet(SYNC_GIST, g.id);
+    lsSet(SYNC_LAST, new Date().toISOString());
+    syncMsg("连接成功，已创建云端备份 ✅");
+    syncUI();
+  })["catch"](function(e){
+    lsSet(SYNC_TOKEN, "");
+    syncMsg("连接失败：" + e.message, true);
+    syncUI();
+  });
+}
+function syncPush(silent){
+  var c = syncCfg();
+  if (!c.token || !c.gist){
+    if (!silent) syncMsg("还没连接", true);
+    return Promise.resolve(false);
+  }
+  if (!silent) syncMsg("正在上传 …");
+  return syncReq("PATCH", "/gists/" + c.gist, syncGistBody()).then(function(){
+    lsSet(SYNC_LAST, new Date().toISOString());
+    if (!silent) syncMsg("已上传 ✅");
+    syncUI();
+    return true;
+  })["catch"](function(e){
+    if (!silent) syncMsg("上传失败：" + e.message, true);
+    return false;
+  });
+}
+function syncPull(){
+  var c = syncCfg();
+  if (!c.token || !c.gist){ syncMsg("还没连接", true); return; }
+  syncMsg("正在下载 …");
+  syncReq("GET", "/gists/" + c.gist).then(function(g){
+    var f = g.files && g.files[SYNC_FILE];
+    if (!f) throw new Error("云端没有 " + SYNC_FILE);
+    var payload = JSON.parse(f.content);
+    var n = syncApply(payload);
+    lsSet(SYNC_LAST, new Date().toISOString());
+    syncMsg("已下载并覆盖本地：" + n + " 条记录 ✅");
+    syncUI();
+  })["catch"](function(e){
+    syncMsg("下载失败：" + e.message, true);
+  });
+}
+function syncToggleAuto(){
+  var el = document.getElementById("syncAuto");
+  lsSet(SYNC_AUTO, (el && el.checked) ? "1" : "0");
+}
+function syncTouch(){
+  var c = syncCfg();
+  if (!c.auto || !c.token || !c.gist) return;
+  if (syncTimer) clearTimeout(syncTimer);
+  syncTimer = setTimeout(function(){ syncPush(true); }, 4000);
+}
+function syncForget(){
+  if (!confirm("断开云同步？本机勾选不会丢，只是不再和云端同步。")) return;
+  lsSet(SYNC_TOKEN, ""); lsSet(SYNC_GIST, ""); lsSet(SYNC_AUTO, "0");
+  syncMsg("已断开");
+  syncUI();
+}
+/* ==== 云同步结束 ==== */
 let filterTrack = null;
 const grid = document.getElementById("grid");
 const archBox = document.getElementById("archbox");
@@ -880,7 +1104,11 @@ const archList = document.getElementById("archlist");
 const archTitle = document.getElementById("archtitle");
 const chips = document.getElementById("chips");
 const uid = (ci, ti, kind) => ci + "|" + kind + "|" + ti;
-const save = () => lsSet(KEY, JSON.stringify(state));
+const save = () => {
+  lsSet(KEY, JSON.stringify(state));
+  /* 开了云同步就防抖 4 秒推一次；typeof 保护防 TDZ（syncTouch 在后面才定义） */
+  if (typeof syncTouch === "function") syncTouch();
+};
 
 function drawGantt(){
   const box = document.getElementById("gantt");
@@ -1064,6 +1292,8 @@ window.onerror = function (msg, src, line, col) {
 
 try {
   render();
+  /* 连接状态和今日面板共用（同一个 localStorage），所以这里一加载就能显示「已连接」 */
+  syncUI();
   if (!persistOK) {
     var cc = document.getElementById("count");
     if (cc) cc.innerHTML += ' &nbsp;<b style="color:#f0883e">⚠️ 本机浏览器禁用了本地存储：勾选只在本次打开期间有效</b>';

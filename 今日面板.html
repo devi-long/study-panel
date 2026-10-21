@@ -3160,16 +3160,25 @@ function syncCfg(){
     last:  lsGet(SYNC_LAST)  || ""
   };
 }
-/* 收集所有 dsh-today-* 键，格式和「导出备份」的 JSON 完全一致 */
+/* 哪些 localStorage 键参与云同步 —— 面板和「进度看板」必须用同一份规则，
+   否则从一边推上去、另一边拉下来就会各丢一半。
+     dsh-today-*  每日勾选
+     dsh-plan-*   进度看板的勾选（dsh-plan-v3）
+   排除：preview（试勾临时数据）、savedAt（纯时间戳，不是 JSON）、
+         :fp（看板卡片指纹，必须本机按当前结构自己算，同步过来会误判结构变化） */
+function syncWanted(k){
+  if (!k) return false;
+  if (k.indexOf("preview") >= 0 || k.indexOf("savedAt") >= 0) return false;
+  if (k.indexOf(":fp") >= 0) return false;
+  return k.indexOf("dsh-today-") === 0 || k.indexOf("dsh-plan-") === 0;
+}
+/* 收集所有参与同步的键，格式和「导出备份」的 JSON 完全一致 */
 function syncCollect(){
   var keys = {};
   try {
     for (var i = 0; i < localStorage.length; i++){
       var k = localStorage.key(i);
-      /* savedAt 存的是纯时间戳字符串（不是 JSON），preview 是试勾临时数据，
-         这两个都不参与同步，否则会被二次编码 / 污染别的设备。 */
-      if (k && k.indexOf("dsh-today-") === 0 &&
-          k.indexOf("preview") < 0 && k.indexOf("savedAt") < 0){
+      if (syncWanted(k)){
         keys[k] = JSON.parse(localStorage.getItem(k) || "null");
       }
     }
@@ -3183,8 +3192,7 @@ function syncApply(payload){
   }
   var n = 0;
   Object.keys(payload.keys).forEach(function(k){
-    if (k.indexOf("dsh-today-") !== 0) return;
-    if (k.indexOf("preview") >= 0 || k.indexOf("savedAt") >= 0) return;
+    if (!syncWanted(k)) return;
     lsSet(k, JSON.stringify(payload.keys[k]));
     n++;
   });
