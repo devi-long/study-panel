@@ -917,6 +917,7 @@ var SYNC_GIST  = "dsh-sync-gist";
 var SYNC_AUTO  = "dsh-sync-auto";
 var SYNC_LAST  = "dsh-sync-last";
 var SYNC_FILE  = "dsh-progress.json";
+var SYNC_DESC  = "study-panel progress backup";
 var SYNC_API   = "https://api.github.com";
 var syncTimer  = null;
 
@@ -1041,6 +1042,8 @@ function syncGistBody(){
   files[SYNC_FILE] = { content: JSON.stringify(payload, null, 2) };
   return { files: files };
 }
+/* 连接时先找账号里「已有的」那份备份 —— 换设备时最怕的就是又新建一份空的，
+   结果旧数据拉不回来。只有确实没有旧备份，才用本机数据新建。 */
 function syncConnect(){
   var inp = document.getElementById("syncToken");
   var tok = String((inp && inp.value) || "").trim();
@@ -1048,17 +1051,35 @@ function syncConnect(){
   lsSet(SYNC_TOKEN, tok);
   syncMsg("正在验证 token …");
   syncReq("GET", "/user").then(function(u){
-    syncMsg("已登录：" + u.login + "，正在创建云端备份 …");
+    syncMsg("已登录：" + u.login + "，正在查找已有的云端备份 …");
+    return syncReq("GET", "/gists?per_page=100").then(function(list){
+      return { login: u.login, list: list };
+    });
+  }).then(function(r){
+    var found = null;
+    (r.list || []).forEach(function(g){
+      if (found || !g) return;
+      if (g.description === SYNC_DESC && g.files && g.files[SYNC_FILE]) found = g;
+    });
+    if (found){
+      /* 接上旧备份：只记 id，不上传（本机可能是空的，传上去就把云端抹了） */
+      lsSet(SYNC_GIST, found.id);
+      lsSet(SYNC_LAST, new Date().toISOString());
+      syncMsg("已接上你以前的云端备份 ✅ 点「⬇️ 从云下载」把勾选拉回来（先别上传，会把云端覆盖成空）");
+      syncUI();
+      return null;
+    }
+    syncMsg("没有找到旧的备份，正在创建第一份 …");
     return syncReq("POST", "/gists", {
-      description: "study-panel progress backup",
+      description: SYNC_DESC,
       public: false,
       files: syncGistBody().files
+    }).then(function(g){
+      lsSet(SYNC_GIST, g.id);
+      lsSet(SYNC_LAST, new Date().toISOString());
+      syncMsg("连接成功，已创建云端备份 ✅");
+      syncUI();
     });
-  }).then(function(g){
-    lsSet(SYNC_GIST, g.id);
-    lsSet(SYNC_LAST, new Date().toISOString());
-    syncMsg("连接成功，已创建云端备份 ✅");
-    syncUI();
   })["catch"](function(e){
     lsSet(SYNC_TOKEN, "");
     syncMsg("连接失败：" + e.message, true);
