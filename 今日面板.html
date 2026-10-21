@@ -4223,7 +4223,7 @@ let auditNote = "";
      m03 03-06 ~ 03-14  蓝桥报名 + 计算机网络（W23 = 03-29 开）
    W36（2027-06-27）之后的采购（660 / 强化两册 / 政治 / 套卷）面板管不到 → 看板里有静态日程。 */
 const PKG_WINDOWS = [
-  {tag:"w1", from:"2026-10-19", to:"2026-10-25",
+  {tag:"w1", from:"2026-10-19", to:"2026-10-25", hold:1,
    title:"📦 W1 采购清单", note:"这批约 450–550 元 · 按编号顺序下单",
    sub:"视频来源已确认 ✅ —— 但<b style='color:#ff7b72'>书不到，W1 的数学和 408 照样跑不起来</b>：第 2/3/4 条（基础30讲三册 · 1000 题 · 王道数据结构）10-21 前必须到手。",
    items:[
@@ -4246,6 +4246,17 @@ const PKG_WINDOWS = [
      {k:"d2", q:2, t:"英一真题（近 20 年，张剑黄皮书一类）", due:"01-18 前"},
      {k:"d3", q:3, t:"四级出分后定第六条：六级 2027-06 那场还考不考（考 → 六级真题按 W23 起排）", due:"12 月底看分"}
    ]},
+  {tag:"cet4", from:"2026-12-05", to:"2026-12-12", kind:"exam", hold:0,
+   title:"🎫 四级考前清单", note:"12-12 考试 · 少一样都进不去考场",
+   sub:"最后一周不要再刷新题 —— <b style='color:#ff7b72'>准考证和耳机才是这两天的事</b>。",
+   items:[
+     {k:"c1", q:1, t:"打印准考证（多打 1 份备用）+ 看清考场楼栋与入场时间", due:"12-05 起", hot:1},
+     {k:"c2", q:2, t:"身份证 + 学生证（证件不全不让进考场）", due:"12-11 前"},
+     {k:"c3", q:3, t:"耳机 + 备用电池（四级听力用耳机，考场不提供；提前试音）", due:"12-11 前", hot:1},
+     {k:"c4", q:4, t:"2B 铅笔 / 橡皮 / 黑色签字笔（作文和翻译要黑色笔）", due:"12-11 前"},
+     {k:"c5", q:5, t:"提前一天踩点：从宿舍到考场要走多久，几点出门", due:"12-11"},
+     {k:"c6", q:6, t:"12-12 当天：早饭吃、8:30 前到、手机按考场要求关机存放", due:"12-12"}
+   ]},
   {tag:"j01", from:"2027-01-16", to:"2027-01-25",
    title:"📦 寒假前采购", note:"寒假 408 加速要用的东西，别等快递停",
    sub:"W15（01-25）进寒假，408 加到 16 h/周；W18（02-22）开操作系统 —— 这两样一起下单，省一次运费。",
@@ -4259,7 +4270,8 @@ const PKG_WINDOWS = [
    sub:"省赛 2027-04-10（W25），报名一般 3 月截止；W23（03-29）开计算机网络。",
    items:[
      {k:"m1", q:1, t:"蓝桥杯省赛报名（2027-04-10 考试，约 300 元）—— 先问学校 / 教练能不能减免", due:"03-14 前", hot:1},
-     {k:"m2", q:2, t:"王道《计算机网络》（W23 = 03-29 开课）", due:"03-28 前"}
+     {k:"m2", q:2, t:"王道《计算机网络》（W23 = 03-29 开课）", due:"03-28 前"},
+     {k:"m3", q:3, t:"六级报名（2027-06-19 考试，六月场 3 月中下旬报名）—— 决定不考就直接跳过这条", due:"3 月中下旬", hot:1}
    ]}
 ];
 /* 面板管不到的部分（W36 = 2027-06-27 之后）→ 看板里有静态日程，这里只列出来备查 */
@@ -4292,6 +4304,20 @@ function pkgWindow(){
   for (let i = 0; i < PKG_WINDOWS.length; i++){
     const w = PKG_WINDOWS[i];
     if (cur >= parseDay(w.from) && cur <= parseDay(w.to)) return w;
+  }
+  /* ⭐ 2026-10-20：窗口过了但东西没买齐 → 继续显示，直到买齐或下一个窗口开始。
+     原来的行为是 10-25 一过 W1 卡就消失，那 8 条书没到也没人提醒（用户指出）。
+     只对 hold:true 的窗口生效，考前清单那种有明确截止的不用 hold。 */
+  for (let i = 0; i < PKG_WINDOWS.length; i++){
+    const w = PKG_WINDOWS[i];
+    if (!w.hold) continue;
+    if (cur <= parseDay(w.to)) continue;
+    const st = pkgState(w.tag);
+    const left = w.items.filter(x => x.pre ? (st[x.k] === false) : !st[x.k]).length;
+    if (left === 0) continue;                 /* 买齐了就收起 */
+    const nxt = PKG_WINDOWS[i + 1];
+    if (nxt && cur >= parseDay(nxt.from)) continue;   /* 下一批开始了，让位 */
+    return w;
   }
   return null;
 }
@@ -4349,10 +4375,13 @@ function renderPkg(){
          '<span class="due' + (x.hot ? " hot" : "") + '">' + esc(x.due) + "</span></span></div>";
   });
   h += '<div class="bar2"><i style="width:' + Math.round(doneN / w.items.length * 100) + '%"></i></div>';
-  h += '<details><summary>W36（2027-06-27）之后才买的（面板管不到，看板里有日程）</summary><div class="later">' +
-       PKG_LATER.map(([d, t]) => "<b>" + esc(d) + "</b> → " + esc(t)).join("<br>") +
-       "</div></details>";
-  h += '<div class="no"><b>明确别买：</b>' + PKG_NO.map(esc).join(" · ") + "</div>";
+  /* 考前清单不是采购卡，别把「W36 之后才买的」和「明确别买」两段贴上去 */
+  if (w.kind !== "exam"){
+    h += '<details><summary>W36（2027-06-27）之后才买的（面板管不到，看板里有日程）</summary><div class="later">' +
+         PKG_LATER.map(([d, t]) => "<b>" + esc(d) + "</b> → " + esc(t)).join("<br>") +
+         "</div></details>";
+    h += '<div class="no"><b>明确别买：</b>' + PKG_NO.map(esc).join(" · ") + "</div>";
+  }
   box.innerHTML = h;
   box.querySelectorAll(".row input").forEach(inp => {
     inp.addEventListener("change", () => pkgToggle(inp.getAttribute("data-k")));
