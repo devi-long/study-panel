@@ -2535,7 +2535,7 @@ const DS_SUBJ_RANGES = [
   [14, 14, "408"],
   [15, 22, "操作系统"],
   [23, 29, "计算机网络"],
-  [30, 35, "408真题"],
+  [30, 35, "408 强化"],
   [36, 36, "408（四门串联）"],
 ];
 DS_SUBJ_RANGES.forEach(function(r){
@@ -3605,7 +3605,7 @@ function dsLabelFor(items, w, fin, d){
     }
     if (!isFinal(d)){
       /* 基础轮之后是真题轮；基础轮之中没排到单元的日子只是复习 */
-      return (fmt(d) > wdLastDate()) ? "408真题" : "408 复习";
+      return (fmt(d) > wdLastDate()) ? "408 强化" : "408 复习";
     }
   }
   const base = dsLabel(w, fin);
@@ -3651,7 +3651,7 @@ function focusDsNm(){
     return Object.keys(subs).join(" + ");
   }
   if (isFinal(cur)) return dsLabel(WEEKS[Math.max(0, Math.min(weekIndex(cur), WEEKS.length - 1))] || {}, true);
-  return (fmt(cur) > wdLastDate()) ? "408真题" : "408 复习";
+  return (fmt(cur) > wdLastDate()) ? "408 强化" : "408 复习";
 }
 function focusDsItems(){
   const ids = focusDsIds();
