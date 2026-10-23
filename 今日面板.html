@@ -2784,6 +2784,12 @@ function planHit(plan, d){
 /* ⭐ 2026-10-17：正式讲次的起点（「不断档练习」方案已于 9.26 作废，零基础热身不再排）。
    否则 planHit() 会 clamp 回第一条，于是 10-11 月的每个周末都写「第1讲」，
    01-25 之后又从头来一遍（用户指出：跟 01-24 后的线代重复了）。 */
+/* 2026-10-21 用户选 A：数学改「完全串行」（高数独占 → 线代独占 → 复盘）。
+   MATH_SERIAL=false 时行为与原来逐字一致；=true 时才走串行分支。
+   串行日期由 .scripts/flip_serial.py 按 _lin_serial.txt 重写。 */
+const MATH_SERIAL = false;
+const LIN_SERIAL_A = parseDay("2027-02-15");
+const LIN_SERIAL_B = parseDay("2027-03-14");
 const MATH_FORMAL_FROM = parseDay("2027-01-18");
 
 /* 概览区的数学行：只给「今天数学推哪一块 + 多长时间」。
@@ -2804,7 +2810,7 @@ function probLine(dow){
   }
   /* ③ 期末缓冲（12-01 ~ 01-24）：一/三/五/日 概率复习 60 · 二/四/六 高数 60 */
   if (inExamWindow(cur)){
-    if (dow === 2 || dow === 4 || dow === 6){
+    if (MATH_SERIAL || dow === 2 || dow === 4 || dow === 6){
       const d2 = planHit(CALC_PLAN, cur);
       return "高数【" + d2.lec + "】" + d2.ch + "（共 60 min）";
     }
@@ -2953,7 +2959,8 @@ function mathItems(dow, d, blockMin){
 
   /* ② 提前起跑（11-09 ~ 11-30）：高数 一/三/五/六，线代 二/四/日 */
   if (day >= CALC_START && day < FINAL_FROM){
-    const calcToday = (dowD === 1 || dowD === 3 || dowD === 5 || dowD === 6);
+    const calcToday = MATH_SERIAL ? true
+      : (dowD === 1 || dowD === 3 || dowD === 5 || dowD === 6);
     pushSession(planHit(calcToday ? CALC_PLAN : LIN_PLAN, day), calcToday ? "高数" : "线代", normalMin);
     return out;
   }
@@ -3008,8 +3015,9 @@ function mathItems(dow, d, blockMin){
   }
 
   /* ④ 2027-01-25 起：寒假 80/天 → 春季按星期分科；线代学完后周二/周四归高数 */
-  const calcToday = (day >= LIN_DONE) ? (dowD !== 0)
-    : (dowD === 1 || dowD === 3 || dowD === 5 || dowD === 6);
+  const calcToday = MATH_SERIAL
+    ? (day < LIN_SERIAL_A ? true : (day < LIN_SERIAL_B ? false : dowD !== 0))
+    : ((day >= LIN_DONE) ? (dowD !== 0) : (dowD === 1 || dowD === 3 || dowD === 5 || dowD === 6));
   pushSession(planHit(calcToday ? CALC_PLAN : LIN_PLAN, day), calcToday ? "高数" : "线代", normalMin);
   return out;
 }
