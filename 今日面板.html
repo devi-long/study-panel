@@ -4136,8 +4136,12 @@ function dayBlocks(dow, w, adapting, fin, wi, d){
     let dsNeed = (!adapting && b.src === "ds") ? wdNeedOf(d) : 0;
     /* 只有走了「真题/复习」兜底的日子才压到 40 min；
        保留了原文的日子（期末复习、年份真题、06-26 整卷）仍用模板时长。 */
+    /* ⭐ 2026-10-22：寒假不能再用 40 min 的「复习日」上限 —— 寒假 408 是 16 h/周的目标
+       （408 复习日占多数），40 min x 7 只有 4.7 h，把 +45 的寒假加成整个吃掉。
+       寒假给 90 min，其余时段维持 40。 */
     if (!adapting && b.src === "ds" && dsNeed <= 0 && !isFinal(d)
-        && String((items && items[0]) || "").indexOf("408 复习：") >= 0) dsNeed = 40;
+        && String((items && items[0]) || "").indexOf("408 复习：") >= 0)
+      dsNeed = isWinter(d) ? 90 : 40;
     const minF = need > 0 ? Math.max(b.min, need)
                : (dsNeed > 0 ? Math.min(b.min, dsNeed) : b.min);
     out.push({ bi: out.length, nm: nm, color: b.color,
