@@ -4877,6 +4877,10 @@ const WEEK_ALL = WEEK_TOTAL.reduce((a, b) => a + b, 0);
 document.addEventListener("DOMContentLoaded", function () {
   try {
     render();
+    /* ⭐ 2026-10-22：页面加载就刷新云同步状态。原来 syncUI() 只在 7 个同步函数里调用，
+       刷新后即使 localStorage 里已有 token，顶栏仍显示「未连接」、且显示的是设置表单
+       而不是「上传/下载」按钮 —— 看起来就像同步坏了一样。 */
+    if (typeof syncUI === "function") syncUI();
   } catch (e) {
     var f = document.getElementById("foot");
     if (f) f.innerHTML = '<b style="color:#f85149">面板启动失败：</b>' + e.message + "（按 Ctrl+F5 刷新）";
@@ -4885,6 +4889,7 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 render();
+if (typeof syncUI === "function") syncUI();
 </script>
 </body>
 </html>
