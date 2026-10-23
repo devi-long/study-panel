@@ -4303,7 +4303,7 @@ function weekdayTemplate(dow, fin, d){
        原来无差别 +30，导致周二/四/五（本来就是 180）= 210 min = 3.5 h 的 408 挤在一天。
        现在只给「本来不够 180」的天加：周一/三 60→90、周六/日 90→120，周二/四/五 保持 180。
        校验：90+180+90+180+180+120+120 = 960 min = 16.0 h/周 ✓ */
-    if (isWinter(day)) blocks = blocks.map(b => (b.src === "ds" && b.min < 180) ? Object.assign({}, b, {min: b.min + 30}) : b);
+    if (isWinter(day)) blocks = blocks.map(b => (b.src === "ds" && b.min < 180) ? Object.assign({}, b, {min: b.min + 45}) : b);
     /* ⭐ 2026-10-17 用户要求：「1-25 ~ 2-28 寒假，数学时间均分到每一天」。
        原来 5 个工作日 60 + 周六 130 + 周日 130 = 560 min/周，周末顶得很高；
        寒假每天都有整块时间 → 560 ÷ 7 = **每天 80 min**（总量一分不差，只是摊平）。
@@ -4317,7 +4317,7 @@ function weekdayTemplate(dow, fin, d){
     if (isWinter(day)) blocks = blocks.map(b => {
       if (b.src !== "math") return b;
       const extra = (dowD === 1 || dowD === 3 || dowD === 5) ? 30 : 0;
-      return Object.assign({}, b, {min: 80 + extra});
+      return Object.assign({}, b, {min: 110 + extra});
     });
     return blocks;
   }
@@ -4359,7 +4359,7 @@ const REST_FULL = [
   "2027-04-17", "2027-05-01", "2027-05-15", "2027-06-05", "2027-06-19"
 ];
 const REST_HALF = [
-  "2026-11-15", "2026-12-13", "2026-12-27", "2027-01-30",
+  "2026-11-15", "2026-12-13", "2026-12-27",
   "2027-02-21", "2027-03-07", "2027-03-21", "2027-04-04",
   "2027-04-18", "2027-05-02", "2027-05-16", "2027-05-30", "2027-06-13"
 ];
