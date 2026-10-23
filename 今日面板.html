@@ -4224,7 +4224,8 @@ const REST_HALF = [
 const _dayBlocksRaw = dayBlocks;
 dayBlocks = function(dow, w, adapting, fin, wi, d){
   const raw = _dayBlocksRaw(dow, w, adapting, fin, wi, d);
-  const key = fmt(d);
+  /* d 可能为 undefined：旧调用方 dayBlocks(dow,w,adapting,fin,wi) 只传 5 个 */
+  const key = d ? fmt(d) : "";
   if (REST_FULL.indexOf(key) >= 0){
     return [{ nm: "休息日", min: 0,
       items: ["今天不学。睡眠 / 运动 / 见人 —— 休息是计划的一部分，不是欠账。"],
