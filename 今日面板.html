@@ -4319,6 +4319,15 @@ function weekdayTemplate(dow, fin, d){
       const extra = (dowD === 1 || dowD === 3 || dowD === 5) ? 30 : 0;
       return Object.assign({}, b, {min: 110 + extra});
     });
+    /* ⭐ 2026-10-22 用户选 A 方案：寒假定位是「最大的时间增量」，总量必须高于平时。
+       原来寒假只是内部零和腾挪（408 从算法挪、数学从 408 挪），总量从没涨过。
+       AI 是唯一还有余量的副线（平时 50 / 周末 70 min），寒假统一提到 100 min/天：
+       100×7 = 700 min = 11.7 h/周，比原来 5.6 h 多 6.1 h，
+       寒假周总量 52.9 → 约 59 h/周（日均 8.5 h），正式高于平时 50.6。 */
+    if (isWinter(day)) blocks = blocks.map(b => (b.src === "ai") ? Object.assign({}, b, {min: 100}) : b);
+    /* 周日原本没有 AI 块（平时设计），寒假要补齐 —— 否则周日只有 7.2 h，把均值拖下来。 */
+    if (isWinter(day) && dowD === 0 && !blocks.some(function(b){ return b.src === "ai"; }))
+      blocks = blocks.concat([Object.assign({}, AI_BLOCK, {min: 100})]);
     return blocks;
   }
   /* 缓冲期：12 月加 AI，1 月不加（用户 2026-10-18） */
