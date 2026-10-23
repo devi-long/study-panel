@@ -2967,7 +2967,8 @@ function mathItems(dow, d, blockMin){
 
   /* ③ 期末缓冲（12-01 ~ 01-24）：概率 4 天（一/三/五/日）+ 高数 3 天（二/四/六），两边都是 60 min */
   if (inExamWindow(day)){
-    if (dowD === 2 || dowD === 4 || dowD === 6){
+    if (MATH_SERIAL || dowD === 2 || dowD === 4 || dowD === 6){
+      /* 2026-10-21 A 方案：串行时整段期末窗口给高数（代价：概率期末复习不再排） */
       pushSession(planHit(CALC_PLAN, day), "高数", 60);
     } else {
       const p = probChapterRaw(day);
