@@ -420,7 +420,7 @@ const WD_UNITS = [
   {s:"操作系统", c:"2.3–2.4", t:"管程 + 死锁的概念 + 死锁的处理策略—预防死锁", v:53, w:35, e:28, b:63},
   {s:"操作系统", c:"2.4", t:"死锁的处理策略—避免死锁 + 死锁的处理策略—检测和解除", v:35, w:23, e:18, b:41},
   {s:"操作系统", c:"3.1", t:"内存的基础知识 + 内存管理的概念", v:42, w:28, e:22, b:50},
-  {s:"操作系统", c:"3.1", t:"进程的内存映像 + (选修）覆盖与交换 + 连续分配管理方式", v:50, w:34, e:27, b:61},
+  {s:"操作系统", c:"3.1", t:"进程的内存映像 + （选修）覆盖与交换 + 连续分配管理方式", v:50, w:34, e:27, b:61},
   {s:"操作系统", c:"3.1", t:"动态分区分配算法 + 基本分页存储管理的概念 + 基本地址变换机构", v:57, w:38, e:30, b:68},
   {s:"操作系统", c:"3.1", t:"具有快表的地址变换机构 + 两级页表", v:38, w:26, e:20, b:46},
   {s:"操作系统", c:"3.1", t:"基本分段存储管理方式 + 段页式管理方式", v:40, w:27, e:21, b:48},
@@ -3603,7 +3603,7 @@ function dsLabelFor(items, w, fin, d){
     }
     if (!isFinal(d)){
       /* 基础轮之后是真题轮；基础轮之中没排到单元的日子只是复习 */
-      return (fmt(d) > wdLastDate()) ? "408真题" : "408 真题/复习";
+      return (fmt(d) > wdLastDate()) ? "408真题" : "408 复习";
     }
   }
   const base = dsLabel(w, fin);
@@ -3649,7 +3649,7 @@ function focusDsNm(){
     return Object.keys(subs).join(" + ");
   }
   if (isFinal(cur)) return dsLabel(WEEKS[Math.max(0, Math.min(weekIndex(cur), WEEKS.length - 1))] || {}, true);
-  return (fmt(cur) > wdLastDate()) ? "408真题" : "408 真题/复习";
+  return (fmt(cur) > wdLastDate()) ? "408真题" : "408 复习";
 }
 function focusDsItems(){
   const ids = focusDsIds();
@@ -3920,9 +3920,9 @@ function buildItems(b, w, dow, wi, d){
         }
       }
       if (stage === "cet6")
-        out.push("考研英语专项 20 min：" + (isSat
-          ? "六级翻译 / 写作 1 篇（听力已在整套里做过，专项不重复听）"
-          : "六级真题（听力 1 篇 / 阅读 1 篇 轮换，严格计时）"));
+        out.push("考研英语专项 20 min：" + ((d || cur) >= parseDay("2027-05-08")
+          ? (isSat ? "六级翻译 / 写作 1 篇（听力已在整套里做过，专项不重复听）" : "六级真题（听力 1 篇 / 阅读 1 篇 轮换，严格计时）")
+          : "英一：翻译专项 2 句 + 复盘"));
       return out;
     }
     if (stage === "cet6"){
@@ -3948,7 +3948,7 @@ function buildItems(b, w, dow, wi, d){
       } else {
         out.push("阅读精读 50 min：" + readMat + "（先做题 → 逐句拆 → 生词进本；听力从 W23 才起，这里全给阅读）");
       }
-      out.push("考研英语专项 20 min：" + (enMat[3] || "翻译 / 写作 轮换（六级独有题型）"));
+      out.push("考研英语专项 20 min：" + ((d || cur) >= parseDay("2027-05-08") ? (enMat[3] || "翻译 / 写作 轮换（六级独有题型）") : "英一：翻译专项 2 句 + 复盘"));
     } else if (stage === "post"){
       /* W9–W13：四级已考完。enMaterial = [总述, 阅读Text1, 阅读Text2, 复盘]
          → 不再当听力材料用；改成「红宝书 + 英一阅读精读」。 */
@@ -3999,13 +3999,13 @@ function buildItems(b, w, dow, wi, d){
       return out;
     }
     const DS_REVIEW = [
-      "真题选择题 20 道（限时 12 min）+ 错题回看（约 45 min）",
-      "真题大题 1 道（先自己想 20 min 再看答案）+ 重做昨天错的（约 60 min）",
       "本章错题重做 + 二刷笔记（约 45 min）",
-      "真题一套的选择填空部分（限时 30 min）+ 订正（约 30 min）",
+      "本章错题重做 + 画知识框架（约 45 min）",
+      "本章错题重做 + 二刷笔记（约 45 min）",
+      "四门轮转：本周最弱的那个科目补一章错题（约 50 min）",
       "四门轮转：本周最弱的那个科目补一章错题（约 50 min）",
       "错题本清一遍 + 画一张本章知识框架（约 40 min）",
-      "真题大题 2 道（每天限时 25 min 一道）+ 对答案（约 60 min）",
+      "错题本清一遍 + 公式 / 流程默写（约 45 min）",
     ];
     /* 原文里已经是「真题/复习/二轮/模拟」的日子保留原文（W27+ 的年份真题清单不能丢） */
     const orig = pick(w && w.ds, dow) || [];
@@ -4016,7 +4016,7 @@ function buildItems(b, w, dow, wi, d){
       orig.forEach(x => out.push(tag + x));
       return out;
     }
-    out.push(tag + "408 真题/复习：" + DS_REVIEW[dow]);
+    out.push(tag + "408 复习：" + DS_REVIEW[dow]);
     return out;
   } else if (b.src === "algo"){
     /* 算法块的分钟数要能对上题量：写明「看/学 → 自己推 → 计时手写」。
@@ -4132,7 +4132,7 @@ function dayBlocks(dow, w, adapting, fin, wi, d){
     /* 只有走了「真题/复习」兜底的日子才压到 40 min；
        保留了原文的日子（期末复习、年份真题、06-26 整卷）仍用模板时长。 */
     if (!adapting && b.src === "ds" && dsNeed <= 0 && !isFinal(d)
-        && String((items && items[0]) || "").indexOf("408 真题/复习：") >= 0) dsNeed = 40;
+        && String((items && items[0]) || "").indexOf("408 复习：") >= 0) dsNeed = 40;
     const minF = need > 0 ? Math.max(b.min, need)
                : (dsNeed > 0 ? Math.min(b.min, dsNeed) : b.min);
     out.push({ bi: out.length, nm: nm, color: b.color,
