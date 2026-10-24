@@ -5124,7 +5124,7 @@ function render(){
         html += '<div class="wk" style="color:#3fb950;background:#0d1c12;border-color:#1f3d26">📌 含学校课上 2h（课上自学推进王道）</div>';
       /* ⭐ 2026-10-17：01-24 之后课表不确定 → 原「课上 2h」已转成 408 自学时间（仍按 3 h 排） */
       if (!adapting && !classKnown && !fin && b.src === "ds" && b.min >= 180 && (dow === 2 || dow === 4 || dow === 5))
-        html += '<div class="wk" style="color:#3fb950;background:#0d1c12;border-color:#1f3d26">📌 课表未定：原「课上 2h」已转为 408 自学时间（本块 3 h）</div>';
+        html += '<div class="wk" style="color:#3fb950;background:#0d1c12;border-color:#1f3d26">📌 408 正常学习时间（本块 3 h）</div>';
     }
     html += "<ul></ul></div>";
     el.innerHTML = html;
