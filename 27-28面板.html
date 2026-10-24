@@ -2924,6 +2924,16 @@ function finalMathItems(dow, d){
   ];
 }
 
+/* ⭐ 2026-10-22：数学块长按阶段强制（来源 notes/数学-全线规划.md）。
+   必须在**块级别**返回，而不是只在 mathItems 内部改 normalMin ——
+   否则块头按模板 min:60 显示「1 h」，条目不写 150 min，用户一眼看出对不上。 */
+function mathMin2728(day){
+  if (!day) return 0;
+  if (day >= parseDay("2027-06-28") && day <= parseDay("2027-09-05")) return 150;
+  if (day > parseDay("2027-09-05") && day <= parseDay("2028-06-25")) return 85;
+  return 0;
+}
+
 function mathItems(dow, d, blockMin){
   /* 数学四阶段（⭐ 2026-10-19 用户改版）：
      ① 2026-10-19 ~ 11-08  张宇概率 6 讲（取消跟课，课上+自习自学；周二 180 / 周末 130 / 其余 60）
@@ -2943,10 +2953,8 @@ function mathItems(dow, d, blockMin){
      不再取模板块的 60/130 —— 模板的数学 min 是给 2026 那一版用的。
        2027.06.28 – 08.31  暑假强化      150 min/天
        2027.09.01 – 2028.06.25  真题/套卷期  85 min/天 */
-  const isSummer2728 = (day >= parseDay("2027-06-28") && day <= parseDay("2027-09-05"));
-  const isLate2728   = (day >= parseDay("2027-09-01") && day <= parseDay("2028-06-25"));
-  const normalMin = isSummer2728 ? 150 : isLate2728 ? 85
-    : (blockMin || (isWinter(day) ? (80 + ((dowD === 1 || dowD === 3 || dowD === 5) ? 30 : 0)) : ((isSat || isSun) ? 130 : 60)));
+  const normalMin = mathMin2728(day)
+    || (blockMin || (isWinter(day) ? (80 + ((dowD === 1 || dowD === 3 || dowD === 5) ? 30 : 0)) : ((isSat || isSun) ? 130 : 60)));
 
   /* ⭐ 2026-10-19 用户选「方案 B：拉长数学块」。
      原来 pl.vid 是从块分钟数倒推的（块 60 → 观看 40 → 原始 60），
@@ -4001,7 +4009,7 @@ function buildItems(b, w, dow, wi, d){
     pick(aiOf(w, wi), dow).forEach(x => out.push(x
       + "（今天就这块 " + aiM + " min：学 " + a1 + " → 自己写 " + a2 + "（能跑、改 3 个参数看结果）→ 记 " + a3 + "（3 行笔记：会了/卡点/明天先做））"));
   } else if (b.src === "math"){
-    mathItems(dow, d, b.min).forEach(x => out.push(x));
+    mathItems(dow, d, mathMin2728(d) || b.min).forEach(x => out.push(x));
   }
   (b.extra || []).forEach(x => out.push(x));
   return out;
@@ -4013,9 +4021,14 @@ function buildItems(b, w, dow, wi, d){
 /* ⭐ 数学块该给多少分钟：直接从条目 2 读回来（视频观看 + 纸上刷题），
    这样「块时长」和「条目里写的时长」永远出自同一处，不会再出现写 130 块给 60 的情况。 */
 function mathNeedOf(items){
+  /* 2026-10-22：数学条目**第一句就是权威总时长**——「⭐ 高数 150 min【…】」，
+     视频段和 review 段都有。原来靠「视频 N min + 纸上刷题 K min」反推，
+     文案一改（纸上刷题 → 自己推例题）就失效，块头退回模板 60 min：
+     暑假显示「1 h」但条目写 150 min，真题期显示「1 h」但条目写 85 min。
+     现在直接读总时长，video / review 两条路径都一致。 */
   for (let i = 0; i < (items || []).length; i++){
-    const m = String(items[i]).match(/视频 ([0-9]+) min（1[.]5× ≈ ([0-9]+) min）[+] 纸上刷题 ([0-9]+) min/);
-    if (m) return Number(m[2]) + Number(m[3]);
+    const m = String(items[i]).match(/⭐ (?:高数|线代|概率) ([0-9]+) min/);
+    if (m) return Number(m[1]);
   }
   return 0;
 }
@@ -4719,7 +4732,7 @@ function render(){
               : b.src === "ds"  ? brief(dsWeekItems())
               : b.src === "algo"? brief(w.algo)
               : b.src === "ai"  ? brief(w.ai)
-              : b.src === "math"? mathItems(dow, cur, b.min).join("｜")
+              : b.src === "math"? mathItems(dow, cur, mathMin2728(cur) || b.min).join("｜")
               :                   "";
       if (v) html += '<div class="wk">本周概览：' + esc(v) + "</div>";
       /* 这天有课时（周二概率 3h / 周四五数据结构 2h），块时长被拉长 → 说明一句，
