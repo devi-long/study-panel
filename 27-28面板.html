@@ -2924,15 +2924,34 @@ function finalMathItems(dow, d){
   ];
 }
 
-/* ⭐ 2026-10-22：数学块长按阶段强制（来源 notes/数学-全线规划.md）。
-   必须在**块级别**返回，而不是只在 mathItems 内部改 normalMin ——
-   否则块头按模板 min:60 显示「1 h」，条目不写 150 min，用户一眼看出对不上。 */
-function mathMin2728(day){
-  if (!day) return 0;
-  if (day >= parseDay("2027-06-28") && day <= parseDay("2027-09-05")) return 150;
-  if (day > parseDay("2027-09-05") && day <= parseDay("2028-06-25")) return 85;
-  return 0;
+/* ============================================================================
+   ⭐ 2026-10-22【唯一真源】阶段分钟覆盖表
+   ----------------------------------------------------------------------------
+   以前每条线的工时散在三处：模板 min、mathItems 里的 normalMin、
+   以及 weekTotal 的重新计算。改一处不漏另一处，就会出现
+   「块头写 1 h、条目写 150 min」这种对不上的情况（真的发生过）。
+
+   以后改某条线在某个阶段的工时，**只改这张表**：
+     src  : "math" | "algo" | "ai" | "en" | "ds"
+     from/to : 含首含尾
+   命中规则：从上到下，第一个 src 匹配且日期在区间的赢；都没命中就用模板 min。
+   ============================================================================ */
+const PHASE_MIN = [
+  {from:"2027-06-28", to:"2027-09-05", src:"math", min:150, why:"暑假强化 36 讲，150 min/天（notes/数学-全线规划.md）"},
+  {from:"2027-09-06", to:"2028-06-25", src:"math", min:85,  why:"真题/套卷期（同上）"},
+  {from:"2027-09-01", to:"2028-06-25", src:"algo", min:60,  why:"用户 2026-10-22：暑期之后竞赛收尾，算法降到 1 h/天"}
+];
+function phaseMin(day, src, fallback){
+  if (!day) return fallback;
+  for (let i = 0; i < PHASE_MIN.length; i++){
+    const r = PHASE_MIN[i];
+    if (r.src !== src) continue;
+    if (day >= parseDay(r.from) && day <= parseDay(r.to)) return r.min;
+  }
+  return fallback;
 }
+/* 兼容旧调用点 */
+function mathMin2728(day){ return phaseMin(day, "math", 0); }
 
 function mathItems(dow, d, blockMin){
   /* 数学四阶段（⭐ 2026-10-19 用户改版）：
@@ -4086,6 +4105,11 @@ function dayBlocks(dow, w, adapting, fin, wi, d){
   if (!adapting && isFlexDay(d)) return flexBlocks();
   let tpl = (adapting ? adaptTemplate() : weekdayTemplate(dow, fin, d));
   if (!adapting) tpl = capTemplate(tpl, d);
+  /* ⭐ 阶段分钟覆盖：所有线统一在这里套表，避免再出现「块头 vs 条目」不一致 */
+  if (!adapting && d) tpl = tpl.map(function(b){
+    const v = phaseMin(d, b.src, b.min);
+    return (v === b.min) ? b : Object.assign({}, b, {min: v});
+  });
   const out = [];
   tpl.forEach((b) => {
     const items = adapting ? b.items : buildItems(b, w, dow, wi, d);
