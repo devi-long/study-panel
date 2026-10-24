@@ -2939,8 +2939,20 @@ function finalMathItems(dow, d){
 const PHASE_MIN = [
   {from:"2027-06-28", to:"2027-09-05", src:"math", min:150, why:"暑假强化 36 讲，150 min/天（notes/数学-全线规划.md）"},
   {from:"2027-09-06", to:"2028-06-25", src:"math", min:85,  why:"真题/套卷期（同上）"},
-  {from:"2027-09-01", to:"2028-06-25", src:"algo", min:60,  why:"用户 2026-10-22：暑期之后竞赛收尾，算法降到 1 h/天"}
+  {from:"2027-09-01", to:"2028-06-25", src:"algo", min:60,  why:"用户 2026-10-22：暑期之后竞赛收尾，算法降到 1 h/天"},
+  {from:"2027-09-01", to:"2028-06-25", src:"ds",   min:85,  why:"408 整卷期基线：没有王道单元数据时不再回退 40 min"}
 ];
+/* 特定日期的分钟覆盖（比 PHASE_MIN 更细）：**408 真题整卷日要连续 180 min**，
+   不能被「85 min 基线」切成两段。隔周六一套，共 17 套：
+   真题 2010–2019（10）+ 2020–2026（7），到最后一套 2028-04-15。
+   改套数 / 换星期几只改这张表。 */
+const DATE_MIN = { "2027-09-04":{ds:180}, "2027-09-18":{ds:180}, "2027-10-02":{ds:180}, "2027-10-16":{ds:180}, "2027-10-30":{ds:180}, "2027-11-13":{ds:180}, "2027-11-27":{ds:180}, "2027-12-11":{ds:180}, "2027-12-25":{ds:180}, "2028-01-08":{ds:180}, "2028-01-22":{ds:180}, "2028-02-05":{ds:180}, "2028-02-19":{ds:180}, "2028-03-04":{ds:180}, "2028-03-18":{ds:180}, "2028-04-01":{ds:180}, "2028-04-15":{ds:180} };
+function dateMin(day, src){
+  if (!day) return 0;
+  const r = DATE_MIN[fmt(day)];
+  return (r && r[src]) ? r[src] : 0;
+}
+
 function phaseMin(day, src, fallback){
   if (!day) return fallback;
   for (let i = 0; i < PHASE_MIN.length; i++){
@@ -4107,7 +4119,7 @@ function dayBlocks(dow, w, adapting, fin, wi, d){
   if (!adapting) tpl = capTemplate(tpl, d);
   /* ⭐ 阶段分钟覆盖：所有线统一在这里套表，避免再出现「块头 vs 条目」不一致 */
   if (!adapting && d) tpl = tpl.map(function(b){
-    const v = phaseMin(d, b.src, b.min);
+    const v = dateMin(d, b.src) || phaseMin(d, b.src, b.min);
     return (v === b.min) ? b : Object.assign({}, b, {min: v});
   });
   const out = [];
@@ -4126,7 +4138,10 @@ function dayBlocks(dow, w, adapting, fin, wi, d){
     let dsNeed = (!adapting && b.src === "ds") ? wdNeedOf(d) : 0;
     /* 只有走了「真题/复习」兜底的日子才压到 40 min；
        保留了原文的日子（期末复习、年份真题、06-26 整卷）仍用模板时长。 */
-    if (!adapting && b.src === "ds" && dsNeed <= 0 && !isFinal(d)
+    /* ⭐ 2026-10-22：只有**没有明确阶段/日期分钟**时才允许回退 40 min。
+       否则 PHASE_MIN 给的 85 会被 Math.min(b.min, 40) 压成 40（实测 158 天 0.7 h）。 */
+    const dsPinned = dateMin(d, "ds") || phaseMin(d, "ds", 0);
+    if (!adapting && b.src === "ds" && dsNeed <= 0 && !isFinal(d) && !dsPinned
         && String((items && items[0]) || "").indexOf("408 真题/复习：") >= 0) dsNeed = 40;
     const minF = need > 0 ? Math.max(b.min, need)
                : (dsNeed > 0 ? Math.min(b.min, dsNeed) : b.min);
